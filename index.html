@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230f1115%22/><text x=%2250%22 y=%2265%22 font-size=%2260%22 text-anchor=%22middle%22>⚽</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏃</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230f1115%22/><text x=%2250%22 y=%2265%22 font-size=%2260%22 text-anchor=%22middle%22>🏃</text></svg>">
 <title>Seguimiento Ligas All</title>
 <style>
   * { box-sizing: border-box; }
@@ -16,42 +16,23 @@
     padding-bottom: 70px;
   }
   .header { padding: 16px 16px 0 16px; }
-  h1 { font-size: 20px; margin: 0 0 16px 0; text-align: center; color: #fff; }
-
-  .tabs {
-    display: flex;
-    background: #1a1d24;
-    border-radius: 12px;
-    margin: 0 16px 16px 16px;
-    overflow: hidden;
-  }
-  .tab-btn {
-    flex: 1;
-    padding: 12px 4px;
-    text-align: center;
-    background: none;
-    border: none;
-    color: #9a9ea8;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .tab-btn.active { background: #2d6a4f; color: #fff; }
+  h1 { font-size: 20px; margin: 0 0 4px 0; text-align: center; color: #fff; }
+  .section-heading { font-size: 15px; font-weight: 700; color: #fff; margin: 4px 0 12px 0; }
 
   .page { display: none; padding: 0 16px; }
   .page.active { display: block; }
 
-  select {
+  .buscador {
     width: 100%;
-    padding: 14px;
+    padding: 14px 16px;
     border-radius: 12px;
     border: 1px solid #2a2d35;
     background: #1a1d24;
     color: #fff;
-    font-size: 16px;
-    margin-bottom: 16px;
-    appearance: none;
+    font-size: 15px;
+    margin-bottom: 14px;
   }
+  .buscador::placeholder { color: #6b6f7a; }
 
   .fila-liga {
     display: flex;
@@ -62,8 +43,11 @@
     border-radius: 12px;
     padding: 14px 16px;
     margin-bottom: 8px;
+    cursor: pointer;
   }
-  .fila-liga-izq { flex: 1; }
+  .fila-liga:active { background: #21252d; }
+  .fila-liga-izq { flex: 1; display: flex; align-items: center; gap: 10px; }
+  .fila-liga-bandera { font-size: 22px; line-height: 1; }
   .fila-liga-nombre { font-size: 15px; font-weight: 600; }
   .fila-liga-pais { font-size: 12px; color: #7d8290; margin-top: 2px; }
   .fila-liga-derecha { display: flex; align-items: center; gap: 10px; }
@@ -72,8 +56,45 @@
   .semaforo-amarillo { background: #a67c00; box-shadow: 0 0 8px #a67c00; }
   .semaforo-rojo { background: #9d2929; box-shadow: 0 0 8px #9d2929; }
   .semaforo-gris { background: #3a3d45; }
-  .fila-liga-racha { font-size: 18px; font-weight: 700; min-width: 40px; text-align: center; }
+  .fila-liga-racha { font-size: 15px; font-weight: 700; min-width: 60px; text-align: center; }
   .fila-liga-sindatos { font-size: 12px; color: #7d8290; }
+  .chevron { color: #4a4d55; font-size: 16px; }
+
+  .volver-btn {
+    background: none;
+    border: none;
+    color: #9a9ea8;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 0 16px 0;
+    cursor: pointer;
+  }
+  .detalle-liga-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .detalle-liga-bandera { font-size: 30px; }
+  .detalle-liga-nombre { font-size: 18px; font-weight: 700; color: #fff; }
+  .detalle-liga-pais { font-size: 12px; color: #7d8290; }
+
+  .subtabs {
+    display: flex;
+    background: #1a1d24;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .subtab-btn {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    background: none;
+    border: none;
+    color: #9a9ea8;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .subtab-btn.active { background: #2d6a4f; color: #fff; }
+  .subpage { display: none; }
+  .subpage.active { display: block; }
 
   .card { border-radius: 16px; padding: 20px; margin-bottom: 16px; text-align: center; }
   .card-green { background: linear-gradient(135deg, #1b4332, #2d6a4f); }
@@ -81,20 +102,26 @@
   .card-red { background: linear-gradient(135deg, #6a1b1b, #9d2929); }
   .card-gray { background: #1a1d24; border: 1px solid #2a2d35; }
 
-  .racha-numero { font-size: 48px; font-weight: 700; color: #fff; line-height: 1; }
+  .racha-numero { font-size: 44px; font-weight: 700; color: #fff; line-height: 1; }
   .racha-label { font-size: 13px; color: rgba(255,255,255,0.85); margin-top: 4px; }
   .racha-fecha { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 8px; }
 
-  .stats-mini {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid rgba(255,255,255,0.15);
+  .ficha-analisis {
+    background: #1a1d24;
+    border: 1px solid #2a2d35;
+    border-radius: 12px;
+    overflow: hidden;
   }
-  .stats-mini div { text-align: center; }
-  .stats-mini .valor { font-size: 18px; font-weight: 700; color: #fff; }
-  .stats-mini .etiqueta { font-size: 10px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .ficha-fila {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #22252c;
+    font-size: 13px;
+  }
+  .ficha-fila:last-child { border-bottom: none; }
+  .ficha-etiqueta { color: #9a9ea8; }
+  .ficha-valor { color: #fff; font-weight: 600; }
 
   .section-title {
     font-size: 14px;
@@ -137,20 +164,6 @@
   .modalidad-badge.paralelo { background: #2a4d6e; }
   .modalidad-badge.secuencial { background: #2a2d35; color: #9a9ea8; }
 
-  .fila-ranking {
-    display: flex;
-    align-items: center;
-    background: #1a1d24;
-    border: 1px solid #2a2d35;
-    border-radius: 12px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-  }
-  .ranking-pos { font-size: 13px; color: #7d8290; width: 24px; }
-  .ranking-nombre { flex: 1; font-size: 14px; font-weight: 600; }
-  .ranking-detalle { font-size: 11px; color: #7d8290; }
-  .ranking-pct { font-size: 18px; font-weight: 700; color: #fff; min-width: 60px; text-align: right; }
-
   .loading, .empty { text-align: center; color: #7d8290; padding: 40px 0; font-size: 14px; }
 
   .refresh-btn {
@@ -171,31 +184,35 @@
 <body>
 
 <div class="header">
-  <h1>⚽ Seguimiento Ligas All</h1>
+  <h1>🏃 Seguimiento Ligas All</h1>
   <div id="ultimaEjecucion" style="text-align:center; font-size:11px; color:#7d8290; margin-bottom:12px;"></div>
-  <div class="tabs">
-    <button class="tab-btn active" id="tabBtnResumen" onclick="cambiarPagina('resumen')">Resumen</button>
-    <button class="tab-btn" id="tabBtnDetalle" onclick="cambiarPagina('detalle')">Partidos</button>
-    <button class="tab-btn" id="tabBtnRanking" onclick="cambiarPagina('ranking')">Ranking</button>
-  </div>
 </div>
 
-<div class="page active" id="pageResumen">
+<div class="page active" id="pageLista">
+  <div class="section-heading">Detalle de las ligas</div>
+  <input type="text" class="buscador" id="buscadorLigas" placeholder="Buscar liga o país...">
   <div id="listaResumen"><div class="loading">Cargando datos...</div></div>
 </div>
 
-<div class="page" id="pageDetalle">
-  <select id="selectorLiga">
-    <option value="">Selecciona una liga...</option>
-  </select>
-  <div id="contenidoDetalle"><div class="empty">Selecciona una liga para ver sus partidos</div></div>
-</div>
+<div class="page" id="pageDetalleLiga">
+  <button class="volver-btn" onclick="volverALista()">← Volver</button>
+  <div class="detalle-liga-header">
+    <div class="detalle-liga-bandera" id="detalleBandera"></div>
+    <div>
+      <div class="detalle-liga-nombre" id="detalleNombre"></div>
+      <div class="detalle-liga-pais" id="detallePais"></div>
+    </div>
+  </div>
 
-<div class="page" id="pageRanking">
-  <select id="selectorLigaRanking">
-    <option value="">Selecciona una liga...</option>
-  </select>
-  <div id="contenidoRanking"><div class="empty">Selecciona una liga para ver el ranking de empates</div></div>
+  <div id="detalleRachaCard"></div>
+
+  <div class="subtabs">
+    <button class="subtab-btn active" id="subtabBtnAnalisis" onclick="cambiarSubpagina('analisis')">Análisis</button>
+    <button class="subtab-btn" id="subtabBtnPartidos" onclick="cambiarSubpagina('partidos')">Partidos</button>
+  </div>
+
+  <div class="subpage active" id="subpageAnalisis"></div>
+  <div class="subpage" id="subpagePartidos"></div>
 </div>
 
 <button class="refresh-btn" onclick="cargarTodo()">↻</button>
@@ -204,17 +221,44 @@
 const SHEET_ID = "1pw9zxaCFvKG3v5JlLbcIInJkuaYK2EiUIjwv8vkOFx8";
 const csvUrl = (gid) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
 
-const URL_PARTIDOS       = csvUrl(0);
-const URL_ANALISIS       = csvUrl(17416755);
-const URL_RACHA          = csvUrl(1219895524);
-const URL_RANKING        = csvUrl(318800609);
-const URL_ESTADO         = csvUrl(874141647);
+const URL_PARTIDOS = csvUrl(0);
+const URL_ANALISIS = csvUrl(17416755);
+const URL_RACHA    = csvUrl(1219895524);
+const URL_ESTADO   = csvUrl(874141647);
+
+const BANDERAS = {
+  "Inglaterra": "🇬🇧", "España": "🇪🇸", "Alemania": "🇩🇪", "Italia": "🇮🇹", "Francia": "🇫🇷",
+  "Países Bajos": "🇳🇱", "Portugal": "🇵🇹", "Bélgica": "🇧🇪", "Turquía": "🇹🇷", "Escocia": "🏴",
+  "Grecia": "🇬🇷", "Dinamarca": "🇩🇰", "Noruega": "🇳🇴", "Suecia": "🇸🇪", "Suiza": "🇨🇭",
+  "Rumania": "🇷🇴", "Rusia": "🇷🇺", "Austria": "🇦🇹", "Polonia": "🇵🇱",
+  "Perú": "🇵🇪", "Brasil": "🇧🇷", "Argentina": "🇦🇷", "México": "🇲🇽", "Colombia": "🇨🇴",
+  "Chile": "🇨🇱", "Ecuador": "🇪🇨", "Uruguay": "🇺🇾", "Paraguay": "🇵🇾", "Venezuela": "🇻🇪",
+  "Costa Rica": "🇨🇷", "Estados Unidos": "🇺🇸", "Arabia Saudita": "🇸🇦", "Japón": "🇯🇵",
+  "Corea del Sur": "🇰🇷", "Australia": "🇦🇺", "China": "🇨🇳",
+};
+function banderaDe(pais) {
+  return BANDERAS[pais] || "🏳️";
+}
+
+const ETIQUETAS_ANALISIS = {
+  pais: "País",
+  liga: "Liga",
+  temporadas_analizadas: "Temporadas analizadas",
+  total_partidos: "Total de partidos",
+  total_empates: "Total de empates",
+  promedio_racha: "Promedio de racha",
+  desviacion_std: "Desviación estándar",
+  umbral_alerta: "Umbral de alerta",
+  racha_maxima: "Racha máxima histórica",
+  partidos_secuenciales: "Partidos secuenciales",
+  pct_secuenciales: "% secuenciales",
+};
 
 let datosPartidos = [];
 let datosAnalisis = [];
 let datosRacha = [];
-let datosRanking = [];
 let ligas = []; // [{id, nombre, pais}], derivado de Racha_Actual
+let ligaActualId = null;
 
 function parseCSVLinea(linea) {
   const valores = [];
@@ -251,30 +295,30 @@ function parseCSV(texto) {
   });
 }
 
-function cambiarPagina(pagina) {
-  document.getElementById("pageResumen").classList.toggle("active", pagina === "resumen");
-  document.getElementById("pageDetalle").classList.toggle("active", pagina === "detalle");
-  document.getElementById("pageRanking").classList.toggle("active", pagina === "ranking");
-  document.getElementById("tabBtnResumen").classList.toggle("active", pagina === "resumen");
-  document.getElementById("tabBtnDetalle").classList.toggle("active", pagina === "detalle");
-  document.getElementById("tabBtnRanking").classList.toggle("active", pagina === "ranking");
+function numeroDecimalComaOPunto(texto) {
+  return parseFloat(String(texto).replace(",", "."));
+}
+
+function cambiarSubpagina(sub) {
+  document.getElementById("subpageAnalisis").classList.toggle("active", sub === "analisis");
+  document.getElementById("subpagePartidos").classList.toggle("active", sub === "partidos");
+  document.getElementById("subtabBtnAnalisis").classList.toggle("active", sub === "analisis");
+  document.getElementById("subtabBtnPartidos").classList.toggle("active", sub === "partidos");
 }
 
 async function cargarTodo() {
   document.getElementById("listaResumen").innerHTML = '<div class="loading">Cargando datos...</div>';
   try {
     const t = Date.now();
-    const [rp, ra, rr, rk, re] = await Promise.all([
+    const [rp, ra, rr, re] = await Promise.all([
       fetch(URL_PARTIDOS + "&t=" + t),
       fetch(URL_ANALISIS + "&t=" + t),
       fetch(URL_RACHA + "&t=" + t),
-      fetch(URL_RANKING + "&t=" + t),
       fetch(URL_ESTADO + "&t=" + t),
     ]);
     datosPartidos = parseCSV(await rp.text());
     datosAnalisis = parseCSV(await ra.text());
     datosRacha = parseCSV(await rr.text());
-    datosRanking = parseCSV(await rk.text());
     const datosEstado = parseCSV(await re.text());
 
     ligas = datosRacha
@@ -286,15 +330,9 @@ async function cargarTodo() {
       ? `Última actualización del sistema: ${filaEjecucion.valor} (hora Perú)`
       : "";
 
-    renderResumen();
-    poblarSelectores();
+    renderLista(ligas);
 
-    const ligaGuardada = localStorage.getItem("ligaSeleccionada");
-    const selector = document.getElementById("selectorLiga");
-    if (ligaGuardada && [...selector.options].some(o => o.value === ligaGuardada)) {
-      selector.value = ligaGuardada;
-      mostrarLiga(ligaGuardada);
-    }
+    if (ligaActualId) mostrarDetalleLiga(ligaActualId);
   } catch (err) {
     document.getElementById("listaResumen").innerHTML = '<div class="empty">Error al cargar los datos. Intenta de nuevo.</div>';
     console.error(err);
@@ -308,44 +346,40 @@ function colorSemaforo(racha, umbral) {
   return "semaforo-verde";
 }
 
-function renderResumen() {
+function renderLista(listaLigas) {
+  if (listaLigas.length === 0) {
+    document.getElementById("listaResumen").innerHTML = '<div class="empty">No se encontraron ligas con ese filtro</div>';
+    return;
+  }
   let html = "";
-  ligas.forEach(liga => {
+  listaLigas.forEach(liga => {
     const info = datosRacha.find(r => r.liga_id === liga.id);
     const racha = info ? parseInt(info.racha_actual || "0") : null;
     const umbral = info ? parseInt(info.umbral_alerta || "5") : 5;
+    const rachaMaxima = info ? info.racha_maxima : "-";
     const color = colorSemaforo(racha, umbral);
 
     html += `
-      <div class="fila-liga">
+      <div class="fila-liga" onclick="mostrarDetalleLiga('${liga.id}')">
         <div class="fila-liga-izq">
-          <div class="fila-liga-nombre">${liga.nombre}</div>
-          <div class="fila-liga-pais">${liga.pais}</div>
+          <div class="fila-liga-bandera">${banderaDe(liga.pais)}</div>
+          <div>
+            <div class="fila-liga-nombre">${liga.nombre}</div>
+            <div class="fila-liga-pais">${liga.pais}</div>
+          </div>
         </div>
         <div class="fila-liga-derecha">
           ${racha === null
             ? '<span class="fila-liga-sindatos">Sin datos</span>'
-            : `<span class="fila-liga-racha">${racha}/${umbral}</span>`
+            : `<span class="fila-liga-racha">${racha}/${umbral}/${rachaMaxima}</span>`
           }
           <span class="semaforo ${color}"></span>
+          <span class="chevron">›</span>
         </div>
       </div>
     `;
   });
   document.getElementById("listaResumen").innerHTML = html;
-}
-
-function poblarSelectores() {
-  for (const idSelector of ["selectorLiga", "selectorLigaRanking"]) {
-    const selector = document.getElementById(idSelector);
-    selector.innerHTML = '<option value="">Selecciona una liga...</option>';
-    ligas.forEach(liga => {
-      const opt = document.createElement("option");
-      opt.value = liga.id;
-      opt.textContent = `${liga.nombre} (${liga.pais})`;
-      selector.appendChild(opt);
-    });
-  }
 }
 
 function etiquetaPorRacha(racha, umbral) {
@@ -355,56 +389,78 @@ function etiquetaPorRacha(racha, umbral) {
   return "Atento";
 }
 
-function mostrarLiga(ligaId) {
-  localStorage.setItem("ligaSeleccionada", ligaId);
+function volverALista() {
+  ligaActualId = null;
+  document.getElementById("pageLista").classList.add("active");
+  document.getElementById("pageDetalleLiga").classList.remove("active");
+}
+
+function mostrarDetalleLiga(ligaId) {
+  ligaActualId = ligaId;
   const liga = ligas.find(l => l.id === ligaId);
+  if (!liga) return;
+
+  document.getElementById("pageLista").classList.remove("active");
+  document.getElementById("pageDetalleLiga").classList.add("active");
+  document.getElementById("detalleBandera").textContent = banderaDe(liga.pais);
+  document.getElementById("detalleNombre").textContent = liga.nombre;
+  document.getElementById("detallePais").textContent = liga.pais;
 
   const infoRacha = datosRacha.find(r => r.liga_id === ligaId);
   const infoAnalisis = datosAnalisis.find(r => r.liga_id === ligaId);
-  const partidosLiga = datosPartidos
-    .filter(p => p.liga_id === ligaId)
-    .sort((a, b) => (b.fecha + b.hora_peru).localeCompare(a.fecha + a.hora_peru))
-    .slice(0, 20);
 
-  if (!infoRacha && partidosLiga.length === 0) {
-    document.getElementById("contenidoDetalle").innerHTML = `
-      <div class="card card-gray">
-        <div class="racha-label" style="font-size:15px;">No hay datos para mostrar todavía</div>
-      </div>
-    `;
-    return;
-  }
-
+  // --- Card de racha vigente ---
   const racha = infoRacha ? parseInt(infoRacha.racha_actual || "0") : 0;
   const umbral = infoRacha ? parseInt(infoRacha.umbral_alerta || "5") : 5;
-  const rachaMaxima = infoRacha ? infoRacha.racha_maxima : "-";
   const ultimaActualizacion = infoRacha ? infoRacha.ultima_actualizacion : "";
   const colorCard = racha >= umbral ? "card-red" : racha >= Math.ceil(umbral / 2) ? "card-yellow" : "card-green";
 
-  let html = `
+  document.getElementById("detalleRachaCard").innerHTML = infoRacha ? `
     <div class="card ${colorCard}">
       <div class="racha-numero">${racha}</div>
       <div class="racha-label">partidos consecutivos sin empate (umbral: ${umbral})</div>
       <div class="racha-label" style="margin-top:6px; font-weight:600;">${etiquetaPorRacha(racha, umbral)}</div>
       ${ultimaActualizacion ? `<div class="racha-fecha">Actualizado: ${ultimaActualizacion}</div>` : ""}
-      <div class="stats-mini">
-        <div><div class="valor">${rachaMaxima}</div><div class="etiqueta">Récord histórico</div></div>
-        ${infoAnalisis ? `<div><div class="valor">${infoAnalisis.pct_secuenciales}%</div><div class="etiqueta">Partidos secuenciales</div></div>` : ""}
-      </div>
     </div>
-    <div class="section-title">Últimos 20 partidos</div>
-  `;
+  ` : `<div class="card card-gray"><div class="racha-label" style="font-size:15px;">Sin datos de racha todavía</div></div>`;
 
-  if (partidosLiga.length === 0) {
-    html += '<div class="empty">Aún no hay partidos registrados para esta liga</div>';
+  // --- Sub-pestaña Analisis ---
+  if (infoAnalisis) {
+    let filas = "";
+    Object.keys(ETIQUETAS_ANALISIS).forEach(campo => {
+      if (infoAnalisis[campo] === undefined) return;
+      filas += `
+        <div class="ficha-fila">
+          <span class="ficha-etiqueta">${ETIQUETAS_ANALISIS[campo]}</span>
+          <span class="ficha-valor">${infoAnalisis[campo]}${campo === "pct_secuenciales" ? "%" : ""}</span>
+        </div>
+      `;
+    });
+    document.getElementById("subpageAnalisis").innerHTML = `<div class="ficha-analisis">${filas}</div>`;
   } else {
-    partidosLiga.forEach(p => {
+    document.getElementById("subpageAnalisis").innerHTML = '<div class="empty">Sin datos de análisis para esta liga</div>';
+  }
+
+  // --- Sub-pestaña Partidos (temporada actual) ---
+  const partidosDeLaLiga = datosPartidos.filter(p => p.liga_id === ligaId);
+  const temporadaActual = partidosDeLaLiga.reduce((max, p) => {
+    const t = parseInt(p.temporada);
+    return t > max ? t : max;
+  }, 0);
+  const partidosTemporadaActual = partidosDeLaLiga
+    .filter(p => parseInt(p.temporada) === temporadaActual)
+    .sort((a, b) => (b.fecha + b.hora_peru).localeCompare(a.fecha + a.hora_peru));
+
+  let htmlPartidos = `<div class="section-title">Temporada ${temporadaActual || "-"} (${partidosTemporadaActual.length} partidos)</div>`;
+  if (partidosTemporadaActual.length === 0) {
+    htmlPartidos += '<div class="empty">Aún no hay partidos registrados para esta liga</div>';
+  } else {
+    partidosTemporadaActual.forEach(p => {
       const esEmpate = p.es_empate === "SI";
-      html += `
+      htmlPartidos += `
         <div class="partido">
           <div class="partido-fecha">
             <span>${p.fecha} · ${p.hora_peru} (hora Perú)</span>
-            <span>${p.temporada}</span>
           </div>
           <div class="partido-marcador">
             <span class="equipo local">${p.equipo_local}</span>
@@ -419,46 +475,17 @@ function mostrarLiga(ligaId) {
       `;
     });
   }
+  document.getElementById("subpagePartidos").innerHTML = htmlPartidos;
 
-  document.getElementById("contenidoDetalle").innerHTML = html;
+  cambiarSubpagina("analisis");
 }
 
-function numeroDecimalComaOPunto(texto) {
-  return parseFloat(String(texto).replace(",", "."));
-}
-
-function mostrarRanking(ligaId) {
-  localStorage.setItem("ligaSeleccionadaRanking", ligaId);
-  const equipos = datosRanking
-    .filter(r => r.liga_id === ligaId)
-    .sort((a, b) => numeroDecimalComaOPunto(b.pct_empates) - numeroDecimalComaOPunto(a.pct_empates));
-
-  if (equipos.length === 0) {
-    document.getElementById("contenidoRanking").innerHTML = '<div class="empty">Sin datos de ranking para esta liga</div>';
-    return;
-  }
-
-  let html = "";
-  equipos.forEach((eq, i) => {
-    html += `
-      <div class="fila-ranking">
-        <div class="ranking-pos">${i + 1}</div>
-        <div>
-          <div class="ranking-nombre">${eq.equipo}</div>
-          <div class="ranking-detalle">${eq.total_empates} empates de ${eq.total_partidos} partidos</div>
-        </div>
-        <div class="ranking-pct">${eq.pct_empates}%</div>
-      </div>
-    `;
-  });
-  document.getElementById("contenidoRanking").innerHTML = html;
-}
-
-document.getElementById("selectorLiga").addEventListener("change", (e) => {
-  if (e.target.value) mostrarLiga(e.target.value);
-});
-document.getElementById("selectorLigaRanking").addEventListener("change", (e) => {
-  if (e.target.value) mostrarRanking(e.target.value);
+document.getElementById("buscadorLigas").addEventListener("input", (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  const filtradas = q
+    ? ligas.filter(l => l.nombre.toLowerCase().includes(q) || l.pais.toLowerCase().includes(q))
+    : ligas;
+  renderLista(filtradas);
 });
 
 cargarTodo();
