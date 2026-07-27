@@ -216,11 +216,35 @@ let datosRacha = [];
 let datosRanking = [];
 let ligas = []; // [{id, nombre, pais}], derivado de Racha_Actual
 
+function parseCSVLinea(linea) {
+  const valores = [];
+  let actual = "";
+  let entreComillas = false;
+  for (let i = 0; i < linea.length; i++) {
+    const c = linea[i];
+    if (c === '"') {
+      if (entreComillas && linea[i + 1] === '"') {
+        actual += '"';
+        i++;
+      } else {
+        entreComillas = !entreComillas;
+      }
+    } else if (c === "," && !entreComillas) {
+      valores.push(actual);
+      actual = "";
+    } else {
+      actual += c;
+    }
+  }
+  valores.push(actual);
+  return valores.map(v => v.trim().replace(/\r/g, ""));
+}
+
 function parseCSV(texto) {
   const lineas = texto.trim().split("\n");
-  const encabezados = lineas[0].split(",").map(h => h.trim().replace(/\r/g, ""));
+  const encabezados = parseCSVLinea(lineas[0]);
   return lineas.slice(1).map(linea => {
-    const valores = linea.split(",").map(v => v.trim().replace(/\r/g, ""));
+    const valores = parseCSVLinea(linea);
     const obj = {};
     encabezados.forEach((h, i) => obj[h] = valores[i]);
     return obj;
@@ -399,11 +423,15 @@ function mostrarLiga(ligaId) {
   document.getElementById("contenidoDetalle").innerHTML = html;
 }
 
+function numeroDecimalComaOPunto(texto) {
+  return parseFloat(String(texto).replace(",", "."));
+}
+
 function mostrarRanking(ligaId) {
   localStorage.setItem("ligaSeleccionadaRanking", ligaId);
   const equipos = datosRanking
     .filter(r => r.liga_id === ligaId)
-    .sort((a, b) => parseFloat(b.pct_empates) - parseFloat(a.pct_empates));
+    .sort((a, b) => numeroDecimalComaOPunto(b.pct_empates) - numeroDecimalComaOPunto(a.pct_empates));
 
   if (equipos.length === 0) {
     document.getElementById("contenidoRanking").innerHTML = '<div class="empty">Sin datos de ranking para esta liga</div>';
