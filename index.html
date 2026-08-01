@@ -67,6 +67,7 @@
   }
   .header { padding: 16px 16px 0 16px; }
   h1 { font-size: 20px; margin: 0 0 4px 0; text-align: center; color: var(--texto-fuerte); }
+  .logo { width: 22px; height: 22px; vertical-align: -3px; }
   .section-heading { font-size: 15px; font-weight: 700; color: var(--texto-fuerte); margin: 4px 0 12px 0; }
 
   .page { display: none; padding: 0 16px; }
@@ -334,7 +335,7 @@
 <body>
 
 <div class="header">
-  <h1>🏃 Seguimiento Ligas All</h1>
+  <h1><svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#1b4332"/><path d="M50 24 L72 40 L64 66 L36 66 L28 40 Z" fill="#ffffff"/><path d="M50 4 L50 24 M96 44 L72 40 M78 88 L64 66 M22 88 L36 66 M4 44 L28 40" stroke="#ffffff" stroke-width="8" fill="none"/></svg> Seguimiento Ligas All</h1>
   <div id="ultimaEjecucion" style="text-align:center; font-size:11px; color:#7d8290; margin-bottom:12px;"></div>
 </div>
 
@@ -617,8 +618,10 @@ function slug(texto) {
   return String(texto).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9]/g, "");
 }
 
-function leerGruposCerrados() {
-  try { return new Set(JSON.parse(localStorage.getItem("gruposCerrados") || "[]")); }
+// Se guarda que grupos estan ABIERTOS, no cerrados: asi el estado inicial, sin
+// nada guardado todavia, es con todos los continentes plegados.
+function leerGruposAbiertos() {
+  try { return new Set(JSON.parse(localStorage.getItem("gruposAbiertos") || "[]")); }
   catch (e) { return new Set(); }
 }
 
@@ -626,9 +629,9 @@ function alternarGrupo(region) {
   const el = document.getElementById("grupo-" + slug(region));
   if (!el) return;
   const cerrado = el.classList.toggle("cerrado");
-  const cerrados = leerGruposCerrados();
-  if (cerrado) cerrados.add(region); else cerrados.delete(region);
-  try { localStorage.setItem("gruposCerrados", JSON.stringify([...cerrados])); } catch (e) { /* modo privado */ }
+  const abiertos = leerGruposAbiertos();
+  if (cerrado) abiertos.delete(region); else abiertos.add(region);
+  try { localStorage.setItem("gruposAbiertos", JSON.stringify([...abiertos])); } catch (e) { /* modo privado */ }
 }
 
 function filaLigaHTML(liga) {
@@ -698,11 +701,11 @@ function renderLista(listaLigas, plano) {
     return ia - ib;
   });
 
-  const cerrados = leerGruposCerrados();
+  const abiertos = leerGruposAbiertos();
   regiones.forEach(region => {
     const ligasDelGrupo = porRegion[region];
     const alertasAca = enAlerta.filter(l => l.region === region).length;
-    const cerrado = cerrados.has(region);
+    const cerrado = !abiertos.has(region); // plegado salvo que el usuario lo haya abierto
     html += `
       <div class="grupo ${cerrado ? "cerrado" : ""}" id="grupo-${slug(region)}">
         <div class="grupo-header" onclick="alternarGrupo(${JSON.stringify(region)})">
