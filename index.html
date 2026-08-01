@@ -6,18 +6,68 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏃</text></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230f1115%22/><text x=%2250%22 y=%2265%22 font-size=%2260%22 text-anchor=%22middle%22>🏃</text></svg>">
 <title>Seguimiento Ligas All</title>
+<script>
+  // Se aplica antes de pintar para que el tema oscuro no arranque con un flash claro.
+  document.documentElement.setAttribute("data-tema", localStorage.getItem("tema") || "claro");
+</script>
 <style>
+  :root {
+    /* Tema claro: el predeterminado */
+    --bg: #f4f5f8;
+    --superficie: #ffffff;
+    --superficie-2: #eceef3;
+    --borde: #dde1e9;
+    --borde-suave: #e9ecf2;
+    --texto: #23262e;
+    --texto-fuerte: #0f1115;
+    --texto-suave: #5a606c;
+    --texto-tenue: #838996;
+    --chevron: #b4bac5;
+    --gris: #c2c7d0;
+    --sombra: rgba(0,0,0,0.14);
+  }
+  :root[data-tema="oscuro"] {
+    --bg: #0f1115;
+    --superficie: #1a1d24;
+    --superficie-2: #22252c;
+    --borde: #2a2d35;
+    --borde-suave: #22252c;
+    --texto: #e8e8ea;
+    --texto-fuerte: #ffffff;
+    --texto-suave: #9a9ea8;
+    --texto-tenue: #7d8290;
+    --chevron: #4a4d55;
+    --gris: #3a3d45;
+    --sombra: rgba(0,0,0,0.45);
+  }
+
+  .tema-btn {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--borde);
+    background: var(--superficie);
+    color: var(--texto-suave);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 20;
+  }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #0f1115;
-    color: #e8e8ea;
+    background: var(--bg);
+    color: var(--texto);
     padding-bottom: 70px;
   }
   .header { padding: 16px 16px 0 16px; }
-  h1 { font-size: 20px; margin: 0 0 4px 0; text-align: center; color: #fff; }
-  .section-heading { font-size: 15px; font-weight: 700; color: #fff; margin: 4px 0 12px 0; }
+  h1 { font-size: 20px; margin: 0 0 4px 0; text-align: center; color: var(--texto-fuerte); }
+  .section-heading { font-size: 15px; font-weight: 700; color: var(--texto-fuerte); margin: 4px 0 12px 0; }
 
   .page { display: none; padding: 0 16px; }
   .page.active { display: block; }
@@ -26,45 +76,45 @@
     width: 100%;
     padding: 14px 16px;
     border-radius: 12px;
-    border: 1px solid #2a2d35;
-    background: #1a1d24;
-    color: #fff;
+    border: 1px solid var(--borde);
+    background: var(--superficie);
+    color: var(--texto);
     font-size: 15px;
     margin-bottom: 14px;
   }
-  .buscador::placeholder { color: #6b6f7a; }
+  .buscador::placeholder { color: var(--texto-tenue); }
 
   .fila-liga {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #1a1d24;
-    border: 1px solid #2a2d35;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
     border-radius: 12px;
     padding: 14px 16px;
     margin-bottom: 8px;
     cursor: pointer;
   }
-  .fila-liga:active { background: #21252d; }
+  .fila-liga:active { background: var(--superficie-2); }
   .fila-liga-izq { flex: 1; display: flex; align-items: center; gap: 10px; }
   .fila-liga-bandera { font-size: 22px; line-height: 1; }
   .fila-liga-nombre { font-size: 15px; font-weight: 600; }
-  .fila-liga-pais { font-size: 12px; color: #7d8290; margin-top: 2px; }
-  .fila-liga-serie { color: #9a9ea8; font-weight: 600; }
+  .fila-liga-pais { font-size: 12px; color: var(--texto-tenue); margin-top: 2px; }
+  .fila-liga-serie { color: var(--texto-suave); font-weight: 600; }
   .fila-liga-derecha { display: flex; align-items: center; gap: 10px; }
   .semaforo { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
   .semaforo-verde { background: #2d6a4f; box-shadow: 0 0 8px #2d6a4f; }
   .semaforo-amarillo { background: #a67c00; box-shadow: 0 0 8px #a67c00; }
   .semaforo-rojo { background: #9d2929; box-shadow: 0 0 8px #9d2929; }
-  .semaforo-gris { background: #3a3d45; }
+  .semaforo-gris { background: var(--gris); }
   .fila-liga-racha { font-size: 15px; font-weight: 700; min-width: 60px; text-align: center; }
-  .fila-liga-sindatos { font-size: 12px; color: #7d8290; }
-  .chevron { color: #4a4d55; font-size: 16px; }
+  .fila-liga-sindatos { font-size: 12px; color: var(--texto-tenue); }
+  .chevron { color: var(--chevron); font-size: 16px; }
 
   .volver-btn {
     background: none;
     border: none;
-    color: #9a9ea8;
+    color: var(--texto-suave);
     font-size: 14px;
     font-weight: 600;
     padding: 8px 0 16px 0;
@@ -72,12 +122,12 @@
   }
   .detalle-liga-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .detalle-liga-bandera { font-size: 30px; }
-  .detalle-liga-nombre { font-size: 18px; font-weight: 700; color: #fff; }
-  .detalle-liga-pais { font-size: 12px; color: #7d8290; }
+  .detalle-liga-nombre { font-size: 18px; font-weight: 700; color: var(--texto-fuerte); }
+  .detalle-liga-pais { font-size: 12px; color: var(--texto-tenue); }
 
   .subtabs {
     display: flex;
-    background: #1a1d24;
+    background: var(--superficie-2);
     border-radius: 12px;
     margin-bottom: 16px;
     overflow: hidden;
@@ -88,7 +138,7 @@
     text-align: center;
     background: none;
     border: none;
-    color: #9a9ea8;
+    color: var(--texto-suave);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
@@ -101,15 +151,15 @@
   .card-green { background: linear-gradient(135deg, #1b4332, #2d6a4f); }
   .card-yellow { background: linear-gradient(135deg, #7f5c00, #a67c00); }
   .card-red { background: linear-gradient(135deg, #6a1b1b, #9d2929); }
-  .card-gray { background: #1a1d24; border: 1px solid #2a2d35; }
+  .card-gray { background: var(--superficie); border: 1px solid var(--borde); }
 
   .racha-numero { font-size: 44px; font-weight: 700; color: #fff; line-height: 1; }
   .racha-label { font-size: 13px; color: rgba(255,255,255,0.85); margin-top: 4px; }
   .racha-fecha { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 8px; }
 
   .ficha-analisis {
-    background: #1a1d24;
-    border: 1px solid #2a2d35;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
     border-radius: 12px;
     overflow: hidden;
   }
@@ -117,16 +167,16 @@
     display: flex;
     justify-content: space-between;
     padding: 12px 16px;
-    border-bottom: 1px solid #22252c;
+    border-bottom: 1px solid var(--borde-suave);
     font-size: 13px;
   }
   .ficha-fila:last-child { border-bottom: none; }
-  .ficha-etiqueta { color: #9a9ea8; }
-  .ficha-valor { color: #fff; font-weight: 600; }
+  .ficha-etiqueta { color: var(--texto-suave); }
+  .ficha-valor { color: var(--texto-fuerte); font-weight: 600; }
 
   .section-title {
     font-size: 14px;
-    color: #9a9ea8;
+    color: var(--texto-suave);
     margin: 20px 0 10px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -134,17 +184,17 @@
 
   .orden-nota {
     font-size: 12px;
-    color: #6b6f7a;
+    color: var(--texto-tenue);
     margin: 2px 2px 10px 2px;
   }
 
   /* --- Sub-pestaña Extremos --- */
-  .extremo-pregunta { font-size: 13px; color: #9a9ea8; margin: 16px 2px 14px 2px; }
+  .extremo-pregunta { font-size: 13px; color: var(--texto-suave); margin: 16px 2px 14px 2px; }
 
   .escala { position: relative; height: 14px; margin: 0 2px 10px 2px; }
   .escala-track {
     position: absolute; inset: 0;
-    background: #22252c; border-radius: 7px; overflow: hidden;
+    background: var(--superficie-2); border-radius: 7px; overflow: hidden;
   }
   .escala-relleno { height: 100%; border-radius: 7px; }
   .escala-relleno.verde { background: linear-gradient(90deg, #1b4332, #2d6a4f); }
@@ -152,50 +202,50 @@
   .escala-relleno.rojo { background: linear-gradient(90deg, #6a1b1b, #9d2929); }
   .escala-tick {
     position: absolute; top: -4px; width: 2px; height: 22px;
-    background: #6b6f7a; transform: translateX(-1px);
+    background: var(--texto-tenue); transform: translateX(-1px);
   }
 
   .escala-leyenda {
     display: flex; flex-wrap: wrap; gap: 4px 14px;
-    font-size: 11px; color: #7d8290; margin: 0 2px 6px 2px;
+    font-size: 11px; color: var(--texto-tenue); margin: 0 2px 6px 2px;
   }
-  .escala-leyenda b { color: #c9ccd4; }
-  .escala-frase { font-size: 13px; color: #e8e8ea; margin: 10px 2px 18px 2px; }
+  .escala-leyenda b { color: var(--texto); }
+  .escala-frase { font-size: 13px; color: var(--texto); margin: 10px 2px 18px 2px; }
 
   .extremo-temp {
-    background: #1a1d24; border: 1px solid #2a2d35;
+    background: var(--superficie); border: 1px solid var(--borde);
     border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
   }
   .extremo-temp-head {
     display: flex; justify-content: space-between;
     align-items: baseline; gap: 8px; margin-bottom: 8px;
   }
-  .extremo-anio { font-size: 15px; font-weight: 700; color: #fff; }
-  .extremo-resumen { font-size: 12px; color: #9a9ea8; text-align: right; }
+  .extremo-anio { font-size: 15px; font-weight: 700; color: var(--texto-fuerte); }
+  .extremo-resumen { font-size: 12px; color: var(--texto-suave); text-align: right; }
   .extremo-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
-    background: #22252c; border: 1px solid #343842; border-radius: 8px;
-    padding: 4px 9px; font-size: 13px; font-weight: 700; color: #e8e8ea;
+    background: var(--superficie-2); border: 1px solid var(--borde); border-radius: 8px;
+    padding: 4px 9px; font-size: 13px; font-weight: 700; color: var(--texto);
   }
   .chip-max { background: #6a1b1b; border-color: #9d2929; color: #fff; }
-  .extremo-vacio { font-size: 12px; color: #6b6f7a; }
+  .extremo-vacio { font-size: 12px; color: var(--texto-tenue); }
 
   /* --- Sub-pestaña Próximos --- */
   .prox-dia {
-    font-size: 13px; font-weight: 700; color: #c9ccd4;
+    font-size: 13px; font-weight: 700; color: var(--texto);
     margin: 16px 2px 8px 2px;
   }
-  .prox-cuando { font-weight: 400; color: #7d8290; font-size: 12px; }
-  .prox-vs { color: #7d8290; font-weight: 600; font-size: 13px; }
+  .prox-cuando { font-weight: 400; color: var(--texto-tenue); font-size: 12px; }
+  .prox-vs { color: var(--texto-tenue); font-weight: 600; font-size: 13px; }
 
   .partido {
-    background: #1a1d24;
-    border: 1px solid #2a2d35;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
     border-radius: 12px;
     padding: 12px 14px;
     margin-bottom: 8px;
   }
-  .partido-fecha { font-size: 11px; color: #7d8290; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .partido-fecha { font-size: 11px; color: var(--texto-tenue); margin-bottom: 6px; display: flex; justify-content: space-between; }
   .partido-marcador { display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
   .equipo { flex: 1; }
   .equipo.local { text-align: right; padding-right: 10px; }
@@ -203,7 +253,7 @@
   .goles {
     font-weight: 700;
     font-size: 17px;
-    background: #262933;
+    background: var(--superficie-2);
     padding: 4px 10px;
     border-radius: 8px;
     min-width: 50px;
@@ -219,9 +269,9 @@
   }
   .empate-badge { background: #7f5c00; }
   .modalidad-badge.paralelo { background: #2a4d6e; }
-  .modalidad-badge.secuencial { background: #2a2d35; color: #9a9ea8; }
+  .modalidad-badge.secuencial { background: var(--superficie-2); color: var(--texto-suave); }
 
-  .loading, .empty { text-align: center; color: #7d8290; padding: 40px 0; font-size: 14px; }
+  .loading, .empty { text-align: center; color: var(--texto-tenue); padding: 40px 0; font-size: 14px; }
 
   .refresh-btn {
     position: fixed;
@@ -234,7 +284,7 @@
     width: 52px;
     height: 52px;
     font-size: 22px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 12px var(--sombra);
   }
 </style>
 </head>
@@ -277,6 +327,7 @@
   <div class="subpage" id="subpageProximos"></div>
 </div>
 
+<button class="tema-btn" id="temaBtn" onclick="alternarTema()" title="Cambiar entre claro y oscuro">☾</button>
 <button class="refresh-btn" onclick="cargarTodo()">↻</button>
 
 <script>
@@ -373,6 +424,18 @@ function parseCSV(texto) {
 
 function numeroDecimalComaOPunto(texto) {
   return parseFloat(String(texto).replace(",", "."));
+}
+
+function aplicarTema(tema) {
+  document.documentElement.setAttribute("data-tema", tema);
+  try { localStorage.setItem("tema", tema); } catch (e) { /* modo privado */ }
+  // El icono muestra a donde se va, no donde se esta.
+  document.getElementById("temaBtn").textContent = tema === "oscuro" ? "☀" : "☾";
+}
+
+function alternarTema() {
+  const actual = document.documentElement.getAttribute("data-tema");
+  aplicarTema(actual === "oscuro" ? "claro" : "oscuro");
 }
 
 // La hoja "Analisis 2" arranca con dos filas de titulo antes de los encabezados.
@@ -769,6 +832,7 @@ document.getElementById("buscadorLigas").addEventListener("input", (e) => {
   renderLista(filtradas);
 });
 
+aplicarTema(document.documentElement.getAttribute("data-tema") || "claro");
 cargarTodo();
 </script>
 
