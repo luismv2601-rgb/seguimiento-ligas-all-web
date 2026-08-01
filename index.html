@@ -221,10 +221,16 @@
 const SHEET_ID = "1pw9zxaCFvKG3v5JlLbcIInJkuaYK2EiUIjwv8vkOFx8";
 const csvUrl = (gid) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
 
-const URL_PARTIDOS = csvUrl(0);
 const URL_ANALISIS = csvUrl(17416755);
 const URL_RACHA    = csvUrl(1219895524);
 const URL_ESTADO   = csvUrl(874141647);
+
+// La hoja Partidos ya pesa mas de 1 MB y crece con cada liga, asi que no se baja
+// entera: se piden solo los partidos de la liga que el usuario abre, filtrados del
+// lado de Google con el lenguaje de consultas de gviz.
+const GID_PARTIDOS = 0;
+const gvizUrl = (gid, consulta) =>
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}&tq=${encodeURIComponent(consulta)}`;
 
 const BANDERAS = {
   "Inglaterra": "🇬🇧", "España": "🇪🇸", "Alemania": "🇩🇪", "Italia": "🇮🇹", "Francia": "🇫🇷",
@@ -254,11 +260,11 @@ const ETIQUETAS_ANALISIS = {
   pct_secuenciales: "% secuenciales",
 };
 
-let datosPartidos = [];
 let datosAnalisis = [];
 let datosRacha = [];
 let ligas = []; // [{id, nombre, pais}], derivado de Racha_Actual
 let ligaActualId = null;
+let cachePartidos = {}; // liga_id -> {temporada, partidos}, para no repedir al volver a entrar
 
 function parseCSVLinea(linea) {
   const valores = [];
@@ -310,13 +316,12 @@ async function cargarTodo() {
   document.getElementById("listaResumen").innerHTML = '<div class="loading">Cargando datos...</div>';
   try {
     const t = Date.now();
-    const [rp, ra, rr, re] = await Promise.all([
-      fetch(URL_PARTIDOS + "&t=" + t),
+    cachePartidos = {}; // el boton de refrescar tiene que traer partidos frescos
+    const [ra, rr, re] = await Promise.all([
       fetch(URL_ANALISIS + "&t=" + t),
       fetch(URL_RACHA + "&t=" + t),
       fetch(URL_ESTADO + "&t=" + t),
     ]);
-    datosPartidos = parseCSV(await rp.text());
     datosAnalisis = parseCSV(await ra.text());
     datosRacha = parseCSV(await rr.text());
     const datosEstado = parseCSV(await re.text());
@@ -441,23 +446,56 @@ function mostrarDetalleLiga(ligaId) {
     document.getElementById("subpageAnalisis").innerHTML = '<div class="empty">Sin datos de análisis para esta liga</div>';
   }
 
-  // --- Sub-pestaña Partidos (temporada actual) ---
-  const partidosDeLaLiga = datosPartidos.filter(p => p.liga_id === ligaId);
-  const temporadaActual = partidosDeLaLiga.reduce((max, p) => {
-    const t = parseInt(p.temporada);
-    return t > max ? t : max;
-  }, 0);
-  const partidosTemporadaActual = partidosDeLaLiga
-    .filter(p => parseInt(p.temporada) === temporadaActual)
+  // --- Sub-pestaña Partidos: se pide aparte, solo para esta liga ---
+  renderPartidos(ligaId);
+
+  cambiarSubpagina("analisis");
+}
+
+async function obtenerPartidosDeLiga(ligaId) {
+  if (cachePartidos[ligaId]) return cachePartidos[ligaId];
+
+  const id = Number(ligaId);
+  if (!id) return { temporada: 0, partidos: [] };
+
+  // 1) La temporada mas reciente de la liga. Pesa ~20 bytes.
+  //    No se puede deducir de la fecha del ultimo partido: en las ligas europeas
+  //    la temporada 2026 se juega entre agosto de 2026 y mayo de 2027.
+  const rMax = await fetch(gvizUrl(GID_PARTIDOS, `select max(E) where B = ${id}`));
+  const filasMax = parseCSV(await rMax.text());
+  const temporada = filasMax.length ? parseInt(Object.values(filasMax[0])[0]) : 0;
+  if (!temporada) {
+    cachePartidos[ligaId] = { temporada: 0, partidos: [] };
+    return cachePartidos[ligaId];
+  }
+
+  // 2) Solo los partidos de esa liga y esa temporada.
+  const r = await fetch(gvizUrl(GID_PARTIDOS, `select * where B = ${id} and E = ${temporada}`));
+  // Se filtra por fecha y no por fixture_id: esa columna tiene tipos mezclados en el
+  // Sheet (numero desde cargar_historico, texto desde actualizar) y gviz devuelve
+  // vacias las celdas que no coinciden con el tipo que infirio para la columna.
+  const partidos = parseCSV(await r.text())
+    .filter(p => p.fecha)
     .sort((a, b) => (b.fecha + b.hora_peru).localeCompare(a.fecha + a.hora_peru));
 
-  let htmlPartidos = `<div class="section-title">Temporada ${temporadaActual || "-"} (${partidosTemporadaActual.length} partidos)</div>`;
-  if (partidosTemporadaActual.length === 0) {
-    htmlPartidos += '<div class="empty">Aún no hay partidos registrados para esta liga</div>';
-  } else {
-    partidosTemporadaActual.forEach(p => {
-      const esEmpate = p.es_empate === "SI";
-      htmlPartidos += `
+  cachePartidos[ligaId] = { temporada, partidos };
+  return cachePartidos[ligaId];
+}
+
+async function renderPartidos(ligaId) {
+  const contenedor = document.getElementById("subpagePartidos");
+  contenedor.innerHTML = '<div class="loading">Cargando partidos...</div>';
+  try {
+    const { temporada, partidos } = await obtenerPartidosDeLiga(ligaId);
+    if (ligaActualId !== ligaId) return; // el usuario ya se fue a otra liga
+
+    let html = `<div class="section-title">Temporada ${temporada || "-"} (${partidos.length} partidos)</div>`;
+    if (partidos.length === 0) {
+      html += '<div class="empty">Aún no hay partidos registrados para esta liga</div>';
+    } else {
+      partidos.forEach(p => {
+        const esEmpate = p.es_empate === "SI";
+        html += `
         <div class="partido">
           <div class="partido-fecha">
             <span>${p.fecha} · ${p.hora_peru} (hora Perú)</span>
@@ -473,11 +511,15 @@ function mostrarDetalleLiga(ligaId) {
           </div>
         </div>
       `;
-    });
+      });
+    }
+    contenedor.innerHTML = html;
+  } catch (err) {
+    console.error(err);
+    if (ligaActualId === ligaId) {
+      contenedor.innerHTML = '<div class="empty">Error al cargar los partidos. Probá de nuevo.</div>';
+    }
   }
-  document.getElementById("subpagePartidos").innerHTML = htmlPartidos;
-
-  cambiarSubpagina("analisis");
 }
 
 document.getElementById("buscadorLigas").addEventListener("input", (e) => {
