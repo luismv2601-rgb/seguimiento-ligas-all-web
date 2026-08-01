@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏃</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230f1115%22/><text x=%2250%22 y=%2265%22 font-size=%2260%22 text-anchor=%22middle%22>🏃</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2246%22 fill=%22%231b4332%22/><path d=%22M50 24 L72 40 L64 66 L36 66 L28 40 Z%22 fill=%22%23ffffff%22/><path d=%22M50 4 L50 24 M96 44 L72 40 M78 88 L64 66 M22 88 L36 66 M4 44 L28 40%22 stroke=%22%23ffffff%22 stroke-width=%228%22 fill=%22none%22/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23ffffff%22/><circle cx=%2250%22 cy=%2250%22 r=%2234%22 fill=%22%231b4332%22/><path d=%22M50 31 L66 43 L60 62 L40 62 L34 43 Z%22 fill=%22%23ffffff%22/><path d=%22M50 16 L50 31 M84 46 L66 43 M70 78 L60 62 M30 78 L40 62 M16 46 L34 43%22 stroke=%22%23ffffff%22 stroke-width=%226%22 fill=%22none%22/></svg>">
 <title>Seguimiento Ligas All</title>
 <script>
   // Se aplica antes de pintar para que el tema oscuro no arranque con un flash claro.
@@ -90,24 +90,38 @@
     justify-content: space-between;
     background: var(--superficie);
     border: 1px solid var(--borde);
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 8px;
+    border-radius: 10px;
+    padding: 9px 12px;
+    margin-bottom: 5px;
     cursor: pointer;
   }
   .fila-liga:active { background: var(--superficie-2); }
-  .fila-liga-izq { flex: 1; display: flex; align-items: center; gap: 10px; }
-  .fila-liga-bandera { font-size: 22px; line-height: 1; }
-  .fila-liga-nombre { font-size: 15px; font-weight: 600; }
-  .fila-liga-pais { font-size: 12px; color: var(--texto-tenue); margin-top: 2px; }
+  .fila-liga-izq { flex: 1; display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .fila-liga-nombre { font-size: 13.5px; font-weight: 600; line-height: 1.25; }
+  .fila-liga-pais { font-size: 11px; color: var(--texto-tenue); margin-top: 1px; }
   .fila-liga-serie { color: var(--texto-suave); font-weight: 600; }
-  .fila-liga-derecha { display: flex; align-items: center; gap: 10px; }
-  .semaforo { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .fila-liga-derecha { display: flex; align-items: center; gap: 8px; }
+  .semaforo { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+
+  .pais-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 21px;
+    padding: 0 5px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    flex-shrink: 0;
+  }
+  .pais-pill-grande { min-width: 42px; height: 30px; font-size: 15px; border-radius: 7px; }
   .semaforo-verde { background: #2d6a4f; box-shadow: 0 0 8px #2d6a4f; }
   .semaforo-amarillo { background: #a67c00; box-shadow: 0 0 8px #a67c00; }
   .semaforo-rojo { background: #9d2929; box-shadow: 0 0 8px #9d2929; }
   .semaforo-gris { background: var(--gris); }
-  .fila-liga-racha { font-size: 15px; font-weight: 700; min-width: 60px; text-align: center; }
+  .fila-liga-racha { font-size: 13px; font-weight: 700; min-width: 54px; text-align: center; }
   .fila-liga-sindatos { font-size: 12px; color: var(--texto-tenue); }
   .chevron { color: var(--chevron); font-size: 16px; }
 
@@ -121,7 +135,7 @@
     cursor: pointer;
   }
   .detalle-liga-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .detalle-liga-bandera { font-size: 30px; }
+  .detalle-liga-bandera { display: flex; }
   .detalle-liga-nombre { font-size: 18px; font-weight: 700; color: var(--texto-fuerte); }
   .detalle-liga-pais { font-size: 12px; color: var(--texto-tenue); }
 
@@ -347,22 +361,48 @@ const GID_PARTIDOS = 0;
 const gvizUrl = (gid, consulta) =>
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}&tq=${encodeURIComponent(consulta)}`;
 
-const BANDERAS = {
-  "Inglaterra": "🇬🇧", "España": "🇪🇸", "Alemania": "🇩🇪", "Italia": "🇮🇹", "Francia": "🇫🇷",
-  "Países Bajos": "🇳🇱", "Portugal": "🇵🇹", "Bélgica": "🇧🇪", "Turquía": "🇹🇷", "Escocia": "🏴",
-  "Grecia": "🇬🇷", "Dinamarca": "🇩🇰", "Noruega": "🇳🇴", "Suecia": "🇸🇪", "Suiza": "🇨🇭",
-  "Rumania": "🇷🇴", "Rusia": "🇷🇺", "Austria": "🇦🇹", "Polonia": "🇵🇱",
-  "Bielorrusia": "🇧🇾", "Armenia": "🇦🇲", "Letonia": "🇱🇻", "Lituania": "🇱🇹",
-  "Estonia": "🇪🇪", "Ucrania": "🇺🇦", "Croacia": "🇭🇷", "Serbia": "🇷🇸",
-  "Chequia": "🇨🇿", "Eslovaquia": "🇸🇰", "Hungría": "🇭🇺", "Bulgaria": "🇧🇬",
-  "Irlanda": "🇮🇪", "Islandia": "🇮🇸", "Finlandia": "🇫🇮", "Chipre": "🇨🇾",
-  "Perú": "🇵🇪", "Brasil": "🇧🇷", "Argentina": "🇦🇷", "México": "🇲🇽", "Colombia": "🇨🇴",
-  "Chile": "🇨🇱", "Ecuador": "🇪🇨", "Uruguay": "🇺🇾", "Paraguay": "🇵🇾", "Venezuela": "🇻🇪",
-  "Costa Rica": "🇨🇷", "Estados Unidos": "🇺🇸", "Arabia Saudita": "🇸🇦", "Japón": "🇯🇵",
-  "Corea del Sur": "🇰🇷", "Australia": "🇦🇺", "China": "🇨🇳",
+// Pastilla plana con el codigo del pais y el color dominante de su bandera.
+// Reemplaza a los emoji de bandera: los dibuja el sistema operativo, salen
+// "ondeados" y ocupan mas alto del que hace falta. Ademas varios Android no los
+// traen y ya se veian como dos letras.
+const PAISES = {
+  "Inglaterra": ["EN", "#c8102e"], "España": ["ES", "#c60b1e"], "Alemania": ["DE", "#1a1a1a"],
+  "Italia": ["IT", "#008c45"], "Francia": ["FR", "#0055a4"], "Países Bajos": ["NL", "#f36c21"],
+  "Portugal": ["PT", "#006600"], "Bélgica": ["BE", "#fdda24"], "Turquía": ["TR", "#e30a17"],
+  "Escocia": ["SC", "#005eb8"], "Grecia": ["GR", "#0d5eaf"], "Dinamarca": ["DK", "#c60c30"],
+  "Noruega": ["NO", "#ba0c2f"], "Suecia": ["SE", "#006aa7"], "Suiza": ["CH", "#d52b1e"],
+  "Rumania": ["RO", "#002b7f"], "Rusia": ["RU", "#0039a6"], "Austria": ["AT", "#ed2939"],
+  "Polonia": ["PL", "#dc143c"], "Bielorrusia": ["BY", "#c8313e"], "Armenia": ["AM", "#d90012"],
+  "Letonia": ["LV", "#9e3039"], "Lituania": ["LT", "#006a44"], "Estonia": ["EE", "#0072ce"],
+  "Ucrania": ["UA", "#0057b7"], "Croacia": ["HR", "#e01e26"], "Serbia": ["RS", "#c6363c"],
+  "Chequia": ["CZ", "#11457e"], "Eslovaquia": ["SK", "#0b4ea2"], "Hungría": ["HU", "#cd2a3e"],
+  "Bulgaria": ["BG", "#00966e"], "Irlanda": ["IE", "#169b62"], "Islandia": ["IS", "#02529c"],
+  "Finlandia": ["FI", "#002f6c"], "Chipre": ["CY", "#d57800"],
+  "Perú": ["PE", "#d91023"], "Brasil": ["BR", "#009c3b"], "Argentina": ["AR", "#74acdf"],
+  "México": ["MX", "#006847"], "Colombia": ["CO", "#fcd116"], "Chile": ["CL", "#0039a6"],
+  "Ecuador": ["EC", "#ffdd00"], "Uruguay": ["UY", "#0038a8"], "Paraguay": ["PY", "#d52b1e"],
+  "Venezuela": ["VE", "#00247d"], "Costa Rica": ["CR", "#ce1126"],
+  "Estados Unidos": ["US", "#3c3b6e"], "Arabia Saudita": ["SA", "#006c35"],
+  "Japón": ["JP", "#bc002d"], "Corea del Sur": ["KR", "#003478"],
+  "Australia": ["AU", "#00247d"], "China": ["CN", "#de2910"],
 };
-function banderaDe(pais) {
-  return BANDERAS[pais] || "🏳️";
+
+// Sobre amarillos y celestes el texto blanco no se lee: se elige segun luminancia.
+function textoSobre(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return lum > 0.6 ? "#1a1a1a" : "#ffffff";
+}
+
+function codigoDe(pais) {
+  const p = PAISES[pais];
+  return p ? p[0] : (pais || "??").slice(0, 2).toUpperCase();
+}
+
+function pastillaDe(pais, clase) {
+  const p = PAISES[pais];
+  const fondo = p ? p[1] : "#8a8f9a";
+  return `<span class="pais-pill ${clase || ""}" style="background:${fondo};color:${textoSobre(fondo)}">${codigoDe(pais)}</span>`;
 }
 
 const ETIQUETAS_ANALISIS = {
@@ -555,7 +595,7 @@ function renderLista(listaLigas) {
     html += `
       <div class="fila-liga" onclick="mostrarDetalleLiga('${liga.id}')">
         <div class="fila-liga-izq">
-          <div class="fila-liga-bandera">${banderaDe(liga.pais)}</div>
+          ${pastillaDe(liga.pais)}
           <div>
             <div class="fila-liga-nombre">${liga.nombre}</div>
             <div class="fila-liga-pais">${liga.pais}${
@@ -597,7 +637,7 @@ function mostrarDetalleLiga(ligaId) {
 
   document.getElementById("pageLista").classList.remove("active");
   document.getElementById("pageDetalleLiga").classList.add("active");
-  document.getElementById("detalleBandera").textContent = banderaDe(liga.pais);
+  document.getElementById("detalleBandera").innerHTML = pastillaDe(liga.pais, "pais-pill-grande");
   document.getElementById("detalleNombre").textContent = liga.nombre;
   document.getElementById("detallePais").textContent = liga.pais;
 
