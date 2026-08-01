@@ -8,29 +8,52 @@ Página web móvil para visualizar el seguimiento de las ligas activas del proye
 
 Página estática (`index.html`) optimizada para móvil que lee datos publicados como CSV desde el Google Sheet del proyecto y los muestra en tiempo real. No requiere servidor ni backend propio — es 100% gratis vía GitHub Pages.
 
-**Ligas activas:** hoy son 17 (12 europeas, 4 sudamericanas y Liga MX). La página **no las tiene hardcodeadas**: arma la lista con lo que encuentra en la hoja `Racha_Actual`, así que agregar o quitar una liga en `ligas.json` del proyecto de datos se refleja acá sin tocar código. El diccionario `BANDERAS` en `index.html` cubre 52 países, más que las ligas activas, para que la bandera ya esté lista cuando se sume una nueva.
+**Ligas activas:** hoy son 24 (12 europeas, 7 sudamericanas, 3 norteamericanas y 2 asiáticas). La página **no las tiene hardcodeadas**: arma la lista con lo que encuentra en la hoja `Racha_Actual`, incluida la columna `region`, así que agregar o quitar una liga en `ligas.json` del proyecto de datos se refleja acá sin tocar código.
+
+## Tema claro y oscuro
+
+La paleta está en variables CSS: **claro por defecto**, y el oscuro se aplica con `data-tema="oscuro"` en `:root`. El botón es un círculo de 30px arriba a la derecha; el ícono muestra a dónde se va, no dónde se está.
+
+La elección se guarda en `localStorage` y se aplica en un `<script>` del `<head>`, **antes de pintar**, para que quien elige oscuro no vea un flash blanco al abrir.
+
+Los colores del semáforo, de las cards de racha y de los badges quedan fijos a propósito: son semánticos y funcionan sobre los dos fondos.
 
 ### Pantalla principal — "Detalle de las ligas"
 
 - **Buscador** de texto que filtra en vivo por nombre de liga o país.
-- Cada fila muestra: bandera, nombre de la liga, país, **% de partidos en serie**, y a la derecha **racha actual / umbral / récord histórico** (ej. `9/5/15`) más un semáforo (verde/amarillo/rojo según qué tan cerca está la racha del umbral propio de esa liga — no hay un umbral fijo como en la v2).
+- Un bloque **"En alerta"** arriba de todo con las ligas que superaron su umbral, sin importar el continente. No se repiten después dentro de su grupo; el encabezado del continente avisa cuántas tiene arriba.
+- Debajo, **los continentes como acordeón**, plegados por defecto: se ven solo los nombres y se despliegan al tocarlos.
+- Cada fila muestra: pastilla del país, nombre de la liga, país, **% de partidos en serie**, y a la derecha **racha actual / umbral / récord histórico** (ej. `9/5/15`) más un semáforo.
 
-#### El orden de la lista
+#### Pastillas de país, no banderas
 
-Dos niveles:
+Los emoji de bandera los dibuja el sistema operativo: salen ondeados, ocupan más alto del necesario, y en varios Android ni siquiera existen —ya se veían como dos letras—. En su lugar hay una pastilla plana con el código del país y el color dominante de su bandera (`PAISES` en `index.html`, 52 países).
 
-1. **Semáforo** — lo que ya está en alerta, arriba.
-2. **`pct_secuenciales` descendente** dentro de cada color.
+El color del texto **se calcula por luminancia**, porque sobre el amarillo de Colombia y Ecuador o el celeste de Argentina el blanco no se lee.
 
-El segundo criterio no es cosmético. En una liga secuencial la racha es un dato limpio; en una que juega en paralelo, el orden entre partidos que arrancan a la misma hora lo decide la API, así que la racha puede variar en ±1. Entre dos ligas en alerta conviene mirar primero la que da el dato más confiable. Como tercer desempate queda `racha / umbral`.
+#### El orden dentro de cada grupo
+
+1. **Semáforo**.
+2. **`pct_secuenciales` descendente**.
+3. **`racha / umbral`** como último desempate.
+
+El segundo criterio no es cosmético. En una liga secuencial la racha es un dato limpio; en una que juega en paralelo, el orden entre partidos que arrancan a la misma hora lo decide la API, así que la racha puede variar en ±1. Entre dos ligas en alerta conviene mirar primero la que da el dato más confiable.
+
+#### Detalles de implementación del acordeón
+
+- Se guarda en `localStorage` qué grupos están **abiertos**, no cuáles están cerrados: así la primera visita, sin nada guardado, arranca con todo plegado.
+- **Al buscar los grupos estorban**, así que los resultados salen planos.
+- El orden de los continentes está en `ORDEN_CONTINENTES`, con América primero. Lo que no figure ahí se agrega al final por orden alfabético.
+- El `onclick` recibe el **id normalizado** (`Sudamerica`), no el nombre. Pasar `"Sudamérica"` por el atributo obliga a comillas dentro de comillas y rompe el HTML — fue un bug real. El nombre viaja en `data-region`.
 
 ### Detalle por liga (al hacer clic en una fila)
 
-Se abre una vista propia con una card de racha vigente arriba, y 3 sub-pestañas:
+Se abre una vista propia con una card de racha vigente arriba, y 4 sub-pestañas:
 
 - **Análisis** — ficha con los campos de la pestaña `Analisis` del Sheet (excepto `liga_id`).
 - **Partidos** — todos los partidos de la **temporada actual** de esa liga. La temporada no se deduce de la fecha del último partido, porque en las ligas europeas la temporada 2026 se juega entre agosto de 2026 y mayo de 2027; se pregunta al Sheet con `select max(E)`.
 - **Extremos** — lee la hoja `Analisis 2`. Arriba, una escala que ubica la racha de hoy contra el umbral, el doble y el récord histórico, con una frase que interpreta dónde cayó. Abajo, un bloque por temporada con cuántas rachas llegaron al doble del umbral, qué porcentaje representan sobre los empates de esa temporada y los largos concretos como chips, con el mayor resaltado.
+- **Próximos** — lee la hoja `Proximos`: los partidos con hora confirmada de los próximos 14 días, agrupados por día y con la distancia en lenguaje natural (hoy, mañana, en 3 días).
 
 La última actualización del sistema (hora Perú) se muestra al inicio. Un botón flotante ↻ recarga los datos y limpia la caché de partidos.
 
@@ -63,6 +86,10 @@ Son dos consultas por liga: la temporada más reciente (~20 bytes) y sus partido
 **Ojo con los decimales:** la hoja usa configuración regional española (coma decimal, ej. `47,5`), y Google Sheets envuelve esos valores entre comillas en el CSV para no romper el formato (`"47,5"`). El parser de `index.html` (`parseCSVLinea`) respeta esas comillas, y `numeroDecimalComaOPunto()` convierte coma a punto antes de cualquier comparación numérica. Si se toca el parser, hay que mantener ambas cosas.
 
 **Ojo con `Analisis 2`:** arranca con dos filas de título antes de los encabezados (de ahí `parseCSVDesde`), y sus celdas de temporada son texto legible del estilo `6 de 81 (7,4%) -> 20, 13, 12`. La página las parsea con `RE_CELDA_EXTREMO`. Ese formato lo genera `analisis_extremos.py` en el proyecto de datos: si cambia allá, hay que cambiar la expresión acá.
+
+**Ojo con `Proximos`:** trae una fila de título antes de los encabezados (`parseCSVDesde(texto, 1)`).
+
+**Ojo con `region`:** la columna vive al final de `Racha_Actual`, no en el medio, porque `actualizar.py` escribe las rachas por rango `D:J` y meterla antes correría las columnas. La mantiene al día `asegurar_region()` en cada corrida horaria.
 
 ---
 
