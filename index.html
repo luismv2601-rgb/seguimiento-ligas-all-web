@@ -131,6 +131,12 @@
     letter-spacing: 0.5px;
   }
 
+  .orden-nota {
+    font-size: 12px;
+    color: #6b6f7a;
+    margin: 2px 2px 10px 2px;
+  }
+
   .partido {
     background: #1a1d24;
     border: 1px solid #2a2d35;
@@ -191,6 +197,7 @@
 <div class="page active" id="pageLista">
   <div class="section-heading">Detalle de las ligas</div>
   <input type="text" class="buscador" id="buscadorLigas" placeholder="Buscar liga o país...">
+  <div class="orden-nota">Ordenadas por cercanía al umbral · las más urgentes arriba</div>
   <div id="listaResumen"><div class="loading">Cargando datos...</div></div>
 </div>
 
@@ -330,9 +337,27 @@ async function cargarTodo() {
     datosRacha = parseCSV(await rr.text());
     const datosEstado = parseCSV(await re.text());
 
+    // Con 17 ligas (y subiendo) el orden alfabetico obligaba a revisar una por una
+    // para ver cual esta por saltar. Se ordena por cercania al umbral: lo urgente
+    // arriba. Para encontrar una liga puntual esta el buscador.
     ligas = datosRacha
-      .map(r => ({ id: r.liga_id, nombre: r.liga, pais: r.pais }))
-      .sort((a, b) => a.pais.localeCompare(b.pais));
+      .map(r => {
+        const racha = parseInt(r.racha_actual || "0");
+        const umbral = parseInt(r.umbral_alerta || "5") || 5;
+        return {
+          id: r.liga_id,
+          nombre: r.liga,
+          pais: r.pais,
+          racha,
+          umbral,
+          proximidad: racha / umbral, // >= 1 significa que ya cruzo el umbral
+        };
+      })
+      .sort((a, b) =>
+        b.proximidad - a.proximidad ||
+        b.racha - a.racha ||
+        a.pais.localeCompare(b.pais)
+      );
 
     const filaEjecucion = datosEstado.filter(r => r.clave === "ultima_ejecucion").pop();
     document.getElementById("ultimaEjecucion").textContent = filaEjecucion
