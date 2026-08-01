@@ -117,6 +117,35 @@
     flex-shrink: 0;
   }
   .pais-pill-grande { min-width: 42px; height: 30px; font-size: 15px; border-radius: 7px; }
+
+  /* --- Agrupacion por continente --- */
+  .alerta-titulo {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; font-weight: 700; color: #9d2929;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin: 2px 2px 8px 2px;
+  }
+  .sin-alertas {
+    font-size: 12px; color: var(--texto-tenue);
+    margin: 2px 2px 16px 2px;
+  }
+  .alerta-bloque { margin-bottom: 18px; }
+
+  .grupo-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 12px; margin-bottom: 5px;
+    background: var(--superficie-2);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .grupo-nombre { font-size: 13px; font-weight: 700; color: var(--texto); }
+  .grupo-meta { font-size: 11px; color: var(--texto-tenue); display: flex; align-items: center; gap: 7px; }
+  .grupo-flecha { font-size: 11px; display: inline-block; transition: transform 0.15s; }
+  .grupo.cerrado .grupo-flecha { transform: rotate(-90deg); }
+  .grupo.cerrado .grupo-contenido { display: none; }
+  .grupo { margin-bottom: 10px; }
   .semaforo-verde { background: #2d6a4f; box-shadow: 0 0 8px #2d6a4f; }
   .semaforo-amarillo { background: #a67c00; box-shadow: 0 0 8px #a67c00; }
   .semaforo-rojo { background: #9d2929; box-shadow: 0 0 8px #9d2929; }
@@ -312,7 +341,7 @@
 <div class="page active" id="pageLista">
   <div class="section-heading">Detalle de las ligas</div>
   <input type="text" class="buscador" id="buscadorLigas" placeholder="Buscar liga o país...">
-  <div class="orden-nota">Primero las que están en alerta · dentro de cada color, mayor % en serie arriba</div>
+  <div class="orden-nota">Las que están en alerta van arriba · dentro de cada continente, mayor % en serie primero</div>
   <div id="listaResumen"><div class="loading">Cargando datos...</div></div>
 </div>
 
@@ -543,6 +572,7 @@ async function cargarTodo() {
           id: r.liga_id,
           nombre: r.liga,
           pais: r.pais,
+          region: (r.region || "").trim() || "Otras",
           racha,
           umbral,
           pctTexto,
@@ -579,42 +609,112 @@ function colorSemaforo(racha, umbral) {
   return "semaforo-verde";
 }
 
-function renderLista(listaLigas) {
+// Los americanos primero: es de donde salio el proyecto y son las que mas se miran.
+// Lo que no este en la lista se agrega al final por orden alfabetico.
+const ORDEN_CONTINENTES = ["Sudamérica", "Norteamérica", "Europa", "Asia"];
+
+function slug(texto) {
+  return String(texto).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9]/g, "");
+}
+
+function leerGruposCerrados() {
+  try { return new Set(JSON.parse(localStorage.getItem("gruposCerrados") || "[]")); }
+  catch (e) { return new Set(); }
+}
+
+function alternarGrupo(region) {
+  const el = document.getElementById("grupo-" + slug(region));
+  if (!el) return;
+  const cerrado = el.classList.toggle("cerrado");
+  const cerrados = leerGruposCerrados();
+  if (cerrado) cerrados.add(region); else cerrados.delete(region);
+  try { localStorage.setItem("gruposCerrados", JSON.stringify([...cerrados])); } catch (e) { /* modo privado */ }
+}
+
+function filaLigaHTML(liga) {
+  const info = datosRacha.find(r => r.liga_id === liga.id);
+  const racha = info ? parseInt(info.racha_actual || "0") : null;
+  const umbral = info ? parseInt(info.umbral_alerta || "5") : 5;
+  const rachaMaxima = info ? info.racha_maxima : "-";
+  const color = colorSemaforo(racha, umbral);
+
+  return `
+    <div class="fila-liga" onclick="mostrarDetalleLiga('${liga.id}')">
+      <div class="fila-liga-izq">
+        ${pastillaDe(liga.pais)}
+        <div>
+          <div class="fila-liga-nombre">${liga.nombre}</div>
+          <div class="fila-liga-pais">${liga.pais}${
+            liga.pctTexto ? ` · <span class="fila-liga-serie">${liga.pctTexto}% en serie</span>` : ""
+          }</div>
+        </div>
+      </div>
+      <div class="fila-liga-derecha">
+        ${racha === null
+          ? '<span class="fila-liga-sindatos">Sin datos</span>'
+          : `<span class="fila-liga-racha">${racha}/${umbral}/${rachaMaxima}</span>`
+        }
+        <span class="semaforo ${color}"></span>
+        <span class="chevron">›</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderLista(listaLigas, plano) {
+  const contenedor = document.getElementById("listaResumen");
   if (listaLigas.length === 0) {
-    document.getElementById("listaResumen").innerHTML = '<div class="empty">No se encontraron ligas con ese filtro</div>';
+    contenedor.innerHTML = '<div class="empty">No se encontraron ligas con ese filtro</div>';
     return;
   }
-  let html = "";
-  listaLigas.forEach(liga => {
-    const info = datosRacha.find(r => r.liga_id === liga.id);
-    const racha = info ? parseInt(info.racha_actual || "0") : null;
-    const umbral = info ? parseInt(info.umbral_alerta || "5") : 5;
-    const rachaMaxima = info ? info.racha_maxima : "-";
-    const color = colorSemaforo(racha, umbral);
 
+  // Buscando, los grupos estorban: se muestran los resultados planos.
+  if (plano) {
+    contenedor.innerHTML = listaLigas.map(filaLigaHTML).join("");
+    return;
+  }
+
+  const enAlerta = listaLigas.filter(l => l.rango === 0);
+  const resto = listaLigas.filter(l => l.rango !== 0);
+
+  let html = "";
+  if (enAlerta.length) {
+    html += `<div class="alerta-bloque">
+      <div class="alerta-titulo"><span class="semaforo semaforo-rojo"></span>En alerta (${enAlerta.length})</div>
+      ${enAlerta.map(filaLigaHTML).join("")}
+    </div>`;
+  } else {
+    html += '<div class="sin-alertas">Ninguna liga superó su umbral ahora mismo.</div>';
+  }
+
+  const porRegion = {};
+  resto.forEach(l => { (porRegion[l.region] = porRegion[l.region] || []).push(l); });
+
+  const regiones = Object.keys(porRegion).sort((a, b) => {
+    const ia = ORDEN_CONTINENTES.indexOf(a), ib = ORDEN_CONTINENTES.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+
+  const cerrados = leerGruposCerrados();
+  regiones.forEach(region => {
+    const ligasDelGrupo = porRegion[region];
+    const alertasAca = enAlerta.filter(l => l.region === region).length;
+    const cerrado = cerrados.has(region);
     html += `
-      <div class="fila-liga" onclick="mostrarDetalleLiga('${liga.id}')">
-        <div class="fila-liga-izq">
-          ${pastillaDe(liga.pais)}
-          <div>
-            <div class="fila-liga-nombre">${liga.nombre}</div>
-            <div class="fila-liga-pais">${liga.pais}${
-              liga.pctTexto ? ` · <span class="fila-liga-serie">${liga.pctTexto}% en serie</span>` : ""
-            }</div>
-          </div>
+      <div class="grupo ${cerrado ? "cerrado" : ""}" id="grupo-${slug(region)}">
+        <div class="grupo-header" onclick="alternarGrupo(${JSON.stringify(region)})">
+          <span class="grupo-nombre">${region}</span>
+          <span class="grupo-meta">${ligasDelGrupo.length}${alertasAca ? ` · ${alertasAca} arriba` : ""}<span class="grupo-flecha">▾</span></span>
         </div>
-        <div class="fila-liga-derecha">
-          ${racha === null
-            ? '<span class="fila-liga-sindatos">Sin datos</span>'
-            : `<span class="fila-liga-racha">${racha}/${umbral}/${rachaMaxima}</span>`
-          }
-          <span class="semaforo ${color}"></span>
-          <span class="chevron">›</span>
-        </div>
+        <div class="grupo-contenido">${ligasDelGrupo.map(filaLigaHTML).join("")}</div>
       </div>
     `;
   });
-  document.getElementById("listaResumen").innerHTML = html;
+
+  contenedor.innerHTML = html;
 }
 
 function etiquetaPorRacha(racha, umbral) {
@@ -869,7 +969,7 @@ document.getElementById("buscadorLigas").addEventListener("input", (e) => {
   const filtradas = q
     ? ligas.filter(l => l.nombre.toLowerCase().includes(q) || l.pais.toLowerCase().includes(q))
     : ligas;
-  renderLista(filtradas);
+  renderLista(filtradas, Boolean(q));
 });
 
 aplicarTema(document.documentElement.getAttribute("data-tema") || "claro");
