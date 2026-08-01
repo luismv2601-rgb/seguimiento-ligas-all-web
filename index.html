@@ -614,6 +614,10 @@ function colorSemaforo(racha, umbral) {
 // Lo que no este en la lista se agrega al final por orden alfabetico.
 const ORDEN_CONTINENTES = ["Sudamérica", "Norteamérica", "Europa", "Asia"];
 
+function escaparAtributo(texto) {
+  return String(texto).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
 function slug(texto) {
   return String(texto).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9]/g, "");
 }
@@ -625,9 +629,12 @@ function leerGruposAbiertos() {
   catch (e) { return new Set(); }
 }
 
-function alternarGrupo(region) {
-  const el = document.getElementById("grupo-" + slug(region));
+// Recibe el id ya normalizado, no el nombre del continente: pasar "Sudamérica"
+// por el atributo onclick obliga a comillas dentro de comillas y rompe el HTML.
+function alternarGrupo(id) {
+  const el = document.getElementById("grupo-" + id);
   if (!el) return;
+  const region = el.dataset.region;
   const cerrado = el.classList.toggle("cerrado");
   const abiertos = leerGruposAbiertos();
   if (cerrado) abiertos.delete(region); else abiertos.add(region);
@@ -707,8 +714,8 @@ function renderLista(listaLigas, plano) {
     const alertasAca = enAlerta.filter(l => l.region === region).length;
     const cerrado = !abiertos.has(region); // plegado salvo que el usuario lo haya abierto
     html += `
-      <div class="grupo ${cerrado ? "cerrado" : ""}" id="grupo-${slug(region)}">
-        <div class="grupo-header" onclick="alternarGrupo(${JSON.stringify(region)})">
+      <div class="grupo ${cerrado ? "cerrado" : ""}" id="grupo-${slug(region)}" data-region="${escaparAtributo(region)}">
+        <div class="grupo-header" onclick="alternarGrupo('${slug(region)}')">
           <span class="grupo-nombre">${region}</span>
           <span class="grupo-meta">${ligasDelGrupo.length}${alertasAca ? ` · ${alertasAca} arriba` : ""}<span class="grupo-flecha">▾</span></span>
         </div>
