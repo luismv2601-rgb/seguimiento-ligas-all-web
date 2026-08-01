@@ -137,6 +137,48 @@
     margin: 2px 2px 10px 2px;
   }
 
+  /* --- Sub-pestaña Extremos --- */
+  .extremo-pregunta { font-size: 13px; color: #9a9ea8; margin: 16px 2px 14px 2px; }
+
+  .escala { position: relative; height: 14px; margin: 0 2px 10px 2px; }
+  .escala-track {
+    position: absolute; inset: 0;
+    background: #22252c; border-radius: 7px; overflow: hidden;
+  }
+  .escala-relleno { height: 100%; border-radius: 7px; }
+  .escala-relleno.verde { background: linear-gradient(90deg, #1b4332, #2d6a4f); }
+  .escala-relleno.amarillo { background: linear-gradient(90deg, #7f5c00, #a67c00); }
+  .escala-relleno.rojo { background: linear-gradient(90deg, #6a1b1b, #9d2929); }
+  .escala-tick {
+    position: absolute; top: -4px; width: 2px; height: 22px;
+    background: #6b6f7a; transform: translateX(-1px);
+  }
+
+  .escala-leyenda {
+    display: flex; flex-wrap: wrap; gap: 4px 14px;
+    font-size: 11px; color: #7d8290; margin: 0 2px 6px 2px;
+  }
+  .escala-leyenda b { color: #c9ccd4; }
+  .escala-frase { font-size: 13px; color: #e8e8ea; margin: 10px 2px 18px 2px; }
+
+  .extremo-temp {
+    background: #1a1d24; border: 1px solid #2a2d35;
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
+  }
+  .extremo-temp-head {
+    display: flex; justify-content: space-between;
+    align-items: baseline; gap: 8px; margin-bottom: 8px;
+  }
+  .extremo-anio { font-size: 15px; font-weight: 700; color: #fff; }
+  .extremo-resumen { font-size: 12px; color: #9a9ea8; text-align: right; }
+  .extremo-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    background: #22252c; border: 1px solid #343842; border-radius: 8px;
+    padding: 4px 9px; font-size: 13px; font-weight: 700; color: #e8e8ea;
+  }
+  .chip-max { background: #6a1b1b; border-color: #9d2929; color: #fff; }
+  .extremo-vacio { font-size: 12px; color: #6b6f7a; }
+
   .partido {
     background: #1a1d24;
     border: 1px solid #2a2d35;
@@ -216,10 +258,12 @@
   <div class="subtabs">
     <button class="subtab-btn active" id="subtabBtnAnalisis" onclick="cambiarSubpagina('analisis')">Análisis</button>
     <button class="subtab-btn" id="subtabBtnPartidos" onclick="cambiarSubpagina('partidos')">Partidos</button>
+    <button class="subtab-btn" id="subtabBtnExtremos" onclick="cambiarSubpagina('extremos')">Extremos</button>
   </div>
 
   <div class="subpage active" id="subpageAnalisis"></div>
   <div class="subpage" id="subpagePartidos"></div>
+  <div class="subpage" id="subpageExtremos"></div>
 </div>
 
 <button class="refresh-btn" onclick="cargarTodo()">↻</button>
@@ -228,9 +272,10 @@
 const SHEET_ID = "1pw9zxaCFvKG3v5JlLbcIInJkuaYK2EiUIjwv8vkOFx8";
 const csvUrl = (gid) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
 
-const URL_ANALISIS = csvUrl(17416755);
-const URL_RACHA    = csvUrl(1219895524);
-const URL_ESTADO   = csvUrl(874141647);
+const URL_ANALISIS  = csvUrl(17416755);
+const URL_RACHA     = csvUrl(1219895524);
+const URL_ESTADO    = csvUrl(874141647);
+const URL_EXTREMOS  = csvUrl(615039692); // hoja "Analisis 2", ~2 KB
 
 // La hoja Partidos ya pesa mas de 1 MB y crece con cada liga, asi que no se baja
 // entera: se piden solo los partidos de la liga que el usuario abre, filtrados del
@@ -273,6 +318,7 @@ const ETIQUETAS_ANALISIS = {
 
 let datosAnalisis = [];
 let datosRacha = [];
+let datosExtremos = [];
 let ligas = []; // [{id, nombre, pais}], derivado de Racha_Actual
 let ligaActualId = null;
 let cachePartidos = {}; // liga_id -> {temporada, partidos}, para no repedir al volver a entrar
@@ -316,11 +362,35 @@ function numeroDecimalComaOPunto(texto) {
   return parseFloat(String(texto).replace(",", "."));
 }
 
+// La hoja "Analisis 2" arranca con dos filas de titulo antes de los encabezados.
+function parseCSVDesde(texto, filasAOmitir) {
+  return parseCSV(texto.trim().split("\n").slice(filasAOmitir).join("\n"));
+}
+
+// Las celdas de temporada de "Analisis 2" vienen como texto legible, del estilo
+// "6 de 81 (7,4%) -> 20, 13, 12". El formato lo genera analisis_extremos.py: si
+// cambia alla, hay que cambiar esta expresion.
+const RE_CELDA_EXTREMO = /^(\d+)\s+de\s+(\d+)\s+\(([\d.,]+)%\)(?:\s*->\s*(.*))?$/;
+
+function parseCeldaExtremo(texto) {
+  const m = RE_CELDA_EXTREMO.exec(String(texto || "").trim());
+  if (!m) return null;
+  return {
+    cantidad: parseInt(m[1]),
+    empates: parseInt(m[2]),
+    pct: m[3],
+    valores: m[4]
+      ? m[4].split(",").map(v => parseInt(v.trim())).filter(n => !isNaN(n))
+      : [],
+  };
+}
+
 function cambiarSubpagina(sub) {
-  document.getElementById("subpageAnalisis").classList.toggle("active", sub === "analisis");
-  document.getElementById("subpagePartidos").classList.toggle("active", sub === "partidos");
-  document.getElementById("subtabBtnAnalisis").classList.toggle("active", sub === "analisis");
-  document.getElementById("subtabBtnPartidos").classList.toggle("active", sub === "partidos");
+  ["Analisis", "Partidos", "Extremos"].forEach(nombre => {
+    const activa = sub === nombre.toLowerCase();
+    document.getElementById("subpage" + nombre).classList.toggle("active", activa);
+    document.getElementById("subtabBtn" + nombre).classList.toggle("active", activa);
+  });
 }
 
 async function cargarTodo() {
@@ -328,12 +398,14 @@ async function cargarTodo() {
   try {
     const t = Date.now();
     cachePartidos = {}; // el boton de refrescar tiene que traer partidos frescos
-    const [ra, rr, re] = await Promise.all([
+    const [ra, rr, re, rx] = await Promise.all([
       fetch(URL_ANALISIS + "&t=" + t),
       fetch(URL_RACHA + "&t=" + t),
       fetch(URL_ESTADO + "&t=" + t),
+      fetch(URL_EXTREMOS + "&t=" + t),
     ]);
     datosAnalisis = parseCSV(await ra.text());
+    datosExtremos = parseCSVDesde(await rx.text(), 2);
     datosRacha = parseCSV(await rr.text());
     const datosEstado = parseCSV(await re.text());
 
@@ -478,7 +550,76 @@ function mostrarDetalleLiga(ligaId) {
   // --- Sub-pestaña Partidos: se pide aparte, solo para esta liga ---
   renderPartidos(ligaId);
 
+  // --- Sub-pestaña Extremos ---
+  renderExtremos(ligaId, racha, umbral);
+
   cambiarSubpagina("analisis");
+}
+
+function renderExtremos(ligaId, rachaActual, umbral) {
+  const contenedor = document.getElementById("subpageExtremos");
+  const info = datosExtremos.find(r => r.liga_id === ligaId);
+  if (!info) {
+    contenedor.innerHTML = '<div class="empty">Sin datos de extremos para esta liga</div>';
+    return;
+  }
+
+  const doble = parseInt(info.doble_umbral || "0") || umbral * 2;
+  const record = parseInt(info.racha_maxima || "0") || 0;
+
+  // Un 8% de aire para que el punto final no quede pegado al borde.
+  const tope = Math.max(record, doble, rachaActual, 1) * 1.08;
+  const pos = v => Math.max(0, Math.min(100, (v / tope) * 100));
+  const color = rachaActual >= umbral ? "rojo"
+    : rachaActual >= Math.ceil(umbral / 2) ? "amarillo" : "verde";
+
+  let frase;
+  if (rachaActual === 0) frase = "Sin racha activa: el último partido fue empate.";
+  else if (record && rachaActual >= record) frase = `Está en su máximo histórico (${record}).`;
+  else if (rachaActual >= doble) frase = `Ya superó el doble del umbral (${doble}).`;
+  else if (rachaActual >= umbral) frase = `Cruzó el umbral, todavía no el doble (${doble}).`;
+  else frase = `Por debajo del umbral (${umbral}).`;
+
+  let html = `
+    <div class="extremo-pregunta">¿Qué tan rara es esta racha?</div>
+    <div class="escala">
+      <div class="escala-track"><div class="escala-relleno ${color}" style="width:${pos(rachaActual)}%"></div></div>
+      <div class="escala-tick" style="left:${pos(umbral)}%"></div>
+      <div class="escala-tick" style="left:${pos(doble)}%"></div>
+    </div>
+    <div class="escala-leyenda">
+      <span>Ahora <b>${rachaActual}</b></span>
+      <span>Umbral <b>${umbral}</b></span>
+      <span>Doble <b>${doble}</b></span>
+      <span>Récord <b>${record || "-"}</b></span>
+    </div>
+    <div class="escala-frase">${frase}</div>
+  `;
+
+  const anios = Object.keys(info).filter(k => /^\d{4}$/.test(k)).sort().reverse();
+  html += `<div class="section-title">Rachas de ${doble} o más, por temporada</div>`;
+
+  anios.forEach(anio => {
+    const d = parseCeldaExtremo(info[anio]);
+    if (!d) return;
+    const maximo = d.valores.length ? Math.max(...d.valores) : null;
+    const chips = d.valores.length
+      ? `<div class="extremo-chips">${d.valores
+          .map(v => `<span class="chip ${v === maximo ? "chip-max" : ""}">${v}</span>`).join("")}</div>`
+      : '<div class="extremo-vacio">Ninguna llegó al doble esta temporada</div>';
+
+    html += `
+      <div class="extremo-temp">
+        <div class="extremo-temp-head">
+          <span class="extremo-anio">${anio}</span>
+          <span class="extremo-resumen">${d.cantidad} de ${d.empates} empates · ${d.pct}%</span>
+        </div>
+        ${chips}
+      </div>
+    `;
+  });
+
+  contenedor.innerHTML = html;
 }
 
 async function obtenerPartidosDeLiga(ligaId) {
