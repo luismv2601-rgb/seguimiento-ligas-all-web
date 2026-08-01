@@ -84,12 +84,12 @@
   }
   .subtab-btn {
     flex: 1;
-    padding: 12px;
+    padding: 12px 4px;
     text-align: center;
     background: none;
     border: none;
     color: #9a9ea8;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
   }
@@ -180,6 +180,14 @@
   .chip-max { background: #6a1b1b; border-color: #9d2929; color: #fff; }
   .extremo-vacio { font-size: 12px; color: #6b6f7a; }
 
+  /* --- Sub-pestaña Próximos --- */
+  .prox-dia {
+    font-size: 13px; font-weight: 700; color: #c9ccd4;
+    margin: 16px 2px 8px 2px;
+  }
+  .prox-cuando { font-weight: 400; color: #7d8290; font-size: 12px; }
+  .prox-vs { color: #7d8290; font-weight: 600; font-size: 13px; }
+
   .partido {
     background: #1a1d24;
     border: 1px solid #2a2d35;
@@ -260,11 +268,13 @@
     <button class="subtab-btn active" id="subtabBtnAnalisis" onclick="cambiarSubpagina('analisis')">Análisis</button>
     <button class="subtab-btn" id="subtabBtnPartidos" onclick="cambiarSubpagina('partidos')">Partidos</button>
     <button class="subtab-btn" id="subtabBtnExtremos" onclick="cambiarSubpagina('extremos')">Extremos</button>
+    <button class="subtab-btn" id="subtabBtnProximos" onclick="cambiarSubpagina('proximos')">Próximos</button>
   </div>
 
   <div class="subpage active" id="subpageAnalisis"></div>
   <div class="subpage" id="subpagePartidos"></div>
   <div class="subpage" id="subpageExtremos"></div>
+  <div class="subpage" id="subpageProximos"></div>
 </div>
 
 <button class="refresh-btn" onclick="cargarTodo()">↻</button>
@@ -276,7 +286,8 @@ const csvUrl = (gid) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/expo
 const URL_ANALISIS  = csvUrl(17416755);
 const URL_RACHA     = csvUrl(1219895524);
 const URL_ESTADO    = csvUrl(874141647);
-const URL_EXTREMOS  = csvUrl(615039692); // hoja "Analisis 2", ~2 KB
+const URL_EXTREMOS  = csvUrl(615039692);   // hoja "Analisis 2", ~2 KB
+const URL_PROXIMOS  = csvUrl(1027481726);  // hoja "Proximos", ~35 KB
 
 // La hoja Partidos ya pesa mas de 1 MB y crece con cada liga, asi que no se baja
 // entera: se piden solo los partidos de la liga que el usuario abre, filtrados del
@@ -320,6 +331,7 @@ const ETIQUETAS_ANALISIS = {
 let datosAnalisis = [];
 let datosRacha = [];
 let datosExtremos = [];
+let datosProximos = [];
 let ligas = []; // [{id, nombre, pais}], derivado de Racha_Actual
 let ligaActualId = null;
 let cachePartidos = {}; // liga_id -> {temporada, partidos}, para no repedir al volver a entrar
@@ -387,7 +399,7 @@ function parseCeldaExtremo(texto) {
 }
 
 function cambiarSubpagina(sub) {
-  ["Analisis", "Partidos", "Extremos"].forEach(nombre => {
+  ["Analisis", "Partidos", "Extremos", "Proximos"].forEach(nombre => {
     const activa = sub === nombre.toLowerCase();
     document.getElementById("subpage" + nombre).classList.toggle("active", activa);
     document.getElementById("subtabBtn" + nombre).classList.toggle("active", activa);
@@ -399,14 +411,16 @@ async function cargarTodo() {
   try {
     const t = Date.now();
     cachePartidos = {}; // el boton de refrescar tiene que traer partidos frescos
-    const [ra, rr, re, rx] = await Promise.all([
+    const [ra, rr, re, rx, rp] = await Promise.all([
       fetch(URL_ANALISIS + "&t=" + t),
       fetch(URL_RACHA + "&t=" + t),
       fetch(URL_ESTADO + "&t=" + t),
       fetch(URL_EXTREMOS + "&t=" + t),
+      fetch(URL_PROXIMOS + "&t=" + t),
     ]);
     datosAnalisis = parseCSV(await ra.text());
     datosExtremos = parseCSVDesde(await rx.text(), 2);
+    datosProximos = parseCSVDesde(await rp.text(), 1); // una fila de titulo
     datosRacha = parseCSV(await rr.text());
     const datosEstado = parseCSV(await re.text());
 
@@ -565,7 +579,50 @@ function mostrarDetalleLiga(ligaId) {
   // --- Sub-pestaña Extremos ---
   renderExtremos(ligaId, racha, umbral);
 
+  // --- Sub-pestaña Próximos ---
+  renderProximos(ligaId);
+
   cambiarSubpagina("analisis");
+}
+
+function textoCuando(dias) {
+  const n = parseInt(dias);
+  if (isNaN(n)) return "";
+  if (n === 0) return "hoy";
+  if (n === 1) return "mañana";
+  return `en ${n} días`;
+}
+
+function renderProximos(ligaId) {
+  const contenedor = document.getElementById("subpageProximos");
+  const partidos = datosProximos
+    .filter(p => p.liga_id === ligaId && p.fecha)
+    .sort((a, b) => (a.fecha + a.hora_peru).localeCompare(b.fecha + b.hora_peru));
+
+  if (partidos.length === 0) {
+    contenedor.innerHTML = '<div class="empty">No hay partidos programados con hora confirmada en los próximos días</div>';
+    return;
+  }
+
+  let html = `<div class="section-title">${partidos.length} programados · próximos 14 días</div>`;
+  let fechaPrevia = null;
+  partidos.forEach(p => {
+    if (p.fecha !== fechaPrevia) {
+      html += `<div class="prox-dia">${p.fecha} <span class="prox-cuando">${textoCuando(p.dias_para)}</span></div>`;
+      fechaPrevia = p.fecha;
+    }
+    html += `
+      <div class="partido">
+        <div class="partido-fecha"><span>${p.hora_peru} (hora Perú)${p.ronda ? " · " + p.ronda : ""}</span></div>
+        <div class="partido-marcador">
+          <span class="equipo local">${p.equipo_local}</span>
+          <span class="goles prox-vs">vs</span>
+          <span class="equipo visitante">${p.equipo_visitante}</span>
+        </div>
+      </div>
+    `;
+  });
+  contenedor.innerHTML = html;
 }
 
 function renderExtremos(ligaId, rachaActual, umbral) {
