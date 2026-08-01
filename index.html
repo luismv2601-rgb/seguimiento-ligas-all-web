@@ -50,6 +50,7 @@
   .fila-liga-bandera { font-size: 22px; line-height: 1; }
   .fila-liga-nombre { font-size: 15px; font-weight: 600; }
   .fila-liga-pais { font-size: 12px; color: #7d8290; margin-top: 2px; }
+  .fila-liga-serie { color: #9a9ea8; font-weight: 600; }
   .fila-liga-derecha { display: flex; align-items: center; gap: 10px; }
   .semaforo { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
   .semaforo-verde { background: #2d6a4f; box-shadow: 0 0 8px #2d6a4f; }
@@ -239,7 +240,7 @@
 <div class="page active" id="pageLista">
   <div class="section-heading">Detalle de las ligas</div>
   <input type="text" class="buscador" id="buscadorLigas" placeholder="Buscar liga o país...">
-  <div class="orden-nota">Ordenadas por cercanía al umbral · las más urgentes arriba</div>
+  <div class="orden-nota">Primero las que están en alerta · dentro de cada color, mayor % en serie arriba</div>
   <div id="listaResumen"><div class="loading">Cargando datos...</div></div>
 </div>
 
@@ -409,25 +410,34 @@ async function cargarTodo() {
     datosRacha = parseCSV(await rr.text());
     const datosEstado = parseCSV(await re.text());
 
-    // Con 17 ligas (y subiendo) el orden alfabetico obligaba a revisar una por una
-    // para ver cual esta por saltar. Se ordena por cercania al umbral: lo urgente
-    // arriba. Para encontrar una liga puntual esta el buscador.
+    // El orden tiene dos niveles. Primero el semaforo: lo que ya esta en alerta
+    // arriba. Dentro de cada color manda el % de partidos en serie, porque en una
+    // liga secuencial la racha es un dato limpio, mientras que en una que juega en
+    // paralelo el orden entre partidos simultaneos es arbitrario y la racha puede
+    // variar en +-1. Para encontrar una liga puntual esta el buscador.
     ligas = datosRacha
       .map(r => {
         const racha = parseInt(r.racha_actual || "0");
         const umbral = parseInt(r.umbral_alerta || "5") || 5;
+        const analisis = datosAnalisis.find(a => a.liga_id === r.liga_id);
+        const pctTexto = analisis ? analisis.pct_secuenciales : "";
+        const pct = numeroDecimalComaOPunto(pctTexto);
         return {
           id: r.liga_id,
           nombre: r.liga,
           pais: r.pais,
           racha,
           umbral,
+          pctTexto,
+          pctSecuenciales: isNaN(pct) ? -1 : pct,
+          rango: racha >= umbral ? 0 : racha >= Math.ceil(umbral / 2) ? 1 : 2,
           proximidad: racha / umbral, // >= 1 significa que ya cruzo el umbral
         };
       })
       .sort((a, b) =>
+        a.rango - b.rango ||
+        b.pctSecuenciales - a.pctSecuenciales ||
         b.proximidad - a.proximidad ||
-        b.racha - a.racha ||
         a.pais.localeCompare(b.pais)
       );
 
@@ -471,7 +481,9 @@ function renderLista(listaLigas) {
           <div class="fila-liga-bandera">${banderaDe(liga.pais)}</div>
           <div>
             <div class="fila-liga-nombre">${liga.nombre}</div>
-            <div class="fila-liga-pais">${liga.pais}</div>
+            <div class="fila-liga-pais">${liga.pais}${
+              liga.pctTexto ? ` · <span class="fila-liga-serie">${liga.pctTexto}% en serie</span>` : ""
+            }</div>
           </div>
         </div>
         <div class="fila-liga-derecha">
