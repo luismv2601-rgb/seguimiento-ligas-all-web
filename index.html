@@ -104,8 +104,15 @@
   }
   .fila-liga:active { background: var(--superficie-2); }
   .fila-liga-izq { flex: 1; display: flex; align-items: center; gap: 9px; min-width: 0; }
-  .fila-liga-nombre { font-size: 13.5px; font-weight: 600; line-height: 1.25; }
-  .fila-liga-pais { font-size: 11px; color: var(--texto-tenue); margin-top: 1px; }
+  .fila-liga-izq > div { min-width: 0; }
+  .fila-liga-nombre {
+    font-size: 13.5px; font-weight: 600; line-height: 1.25;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .fila-liga-pais {
+    font-size: 11px; color: var(--texto-tenue); margin-top: 1px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   .fila-liga-serie { color: var(--texto-suave); font-weight: 600; }
   .fila-liga-derecha { display: flex; align-items: center; gap: 8px; }
   .semaforo { width: 11px; height: 11px; border-radius: 0; flex-shrink: 0; }
@@ -149,9 +156,14 @@
     margin: 2px 2px 16px 2px;
   }
   .alerta-bloque { margin-bottom: 18px; }
-  .cuenta { margin-top: 2px; }
-  .cuenta-falta { font-size: 11px; font-weight: 700; color: #9d2929; }
-  .cuenta-vacia { font-size: 10px; color: var(--texto-tenue); font-weight: 400; }
+  /* La cuenta va bajo el semaforo, en el espacio vertical que la columna derecha
+     ya tenia libre: la fila no crece de alto. */
+  .semaforo-col {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2px; min-width: 40px;
+  }
+  .cuenta { font-size: 10px; font-weight: 700; color: #9d2929; line-height: 1; white-space: nowrap; }
+  .cuenta-vacia { color: var(--texto-tenue); font-weight: 400; }
 
   .grupo-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -765,29 +777,28 @@ function proximoPartidoDe(ligaId) {
   return mejor;
 }
 
+// Texto corto a proposito: va debajo del semaforo, en una columna angosta.
 function textoFalta(ms) {
-  if (ms <= 0) return "en juego o por comenzar";
+  if (ms <= 0) return "ahora";
   const min = Math.floor(ms / 60000);
   const dias = Math.floor(min / 1440);
   const horas = Math.floor((min % 1440) / 60);
   const mins = min % 60;
-  if (dias > 0) return `faltan ${dias}d ${horas}h`;
-  if (horas > 0) return `faltan ${horas}h ${mins}m`;
-  return `faltan ${mins}m`;
+  if (dias > 0) return `${dias}d ${horas}h`;
+  if (horas > 0) return `${horas}h ${mins}m`;
+  return `${mins}m`;
 }
 
 function cuentaRegresivaHTML(ligaId) {
   const prox = proximoPartidoDe(ligaId);
-  if (!prox) return '<div class="cuenta cuenta-vacia">Sin partido programado</div>';
-  return `<div class="cuenta" data-liga="${ligaId}" data-t="${prox.t}">` +
-    `<span class="cuenta-falta">${textoFalta(prox.t - Date.now())}</span></div>`;
+  if (!prox) return '<span class="cuenta cuenta-vacia">sin fecha</span>';
+  return `<span class="cuenta" data-t="${prox.t}">${textoFalta(prox.t - Date.now())}</span>`;
 }
 
 // Un solo temporizador para todas las cuentas visibles.
 function refrescarCuentas() {
   document.querySelectorAll(".cuenta[data-t]").forEach(el => {
-    const span = el.querySelector(".cuenta-falta");
-    if (span) span.textContent = textoFalta(Number(el.dataset.t) - Date.now());
+    el.textContent = textoFalta(Number(el.dataset.t) - Date.now());
   });
 }
 setInterval(refrescarCuentas, 60000);
@@ -808,7 +819,6 @@ function filaLigaHTML(liga, conCuenta) {
           <div class="fila-liga-pais">${liga.pais}${
             liga.pctTexto ? ` · <span class="fila-liga-serie">${liga.pctTexto}% en serie</span>` : ""
           }</div>
-          ${conCuenta ? cuentaRegresivaHTML(liga.id) : ""}
         </div>
       </div>
       <div class="fila-liga-derecha">
@@ -816,7 +826,10 @@ function filaLigaHTML(liga, conCuenta) {
           ? '<span class="fila-liga-sindatos">Sin datos</span>'
           : `<span class="fila-liga-racha">${racha}/${umbral}/${rachaMaxima}</span>`
         }
-        <span class="semaforo ${color}"></span>
+        <span class="semaforo-col">
+          <span class="semaforo ${color}"></span>
+          ${conCuenta ? cuentaRegresivaHTML(liga.id) : ""}
+        </span>
         <span class="chevron">›</span>
       </div>
     </div>
