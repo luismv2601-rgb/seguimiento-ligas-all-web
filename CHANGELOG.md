@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.0.0 - 2026-08-02
+
+Rediseño visual y salto de 24 a 43 ligas.
+
+- **Banderas planas en vez de pastillas.** 43 banderas dibujadas como SVG en línea (~9 KB), cuadradas con esquinas de 3,5px. Son simplificadas a propósito: a 26px un escudo real es una mancha, así que solo se dibuja la forma mínima que separa a las que se confundirían — el escudo de Eslovaquia y Eslovenia frente al tricolor ruso, la hoja de Canadá frente a Perú, y un círculo, cinco estrellas y un triángulo para los tres azul-blanco-azul centroamericanos. `PAISES` queda como fallback
+- **Franja azul marino** en el título, igual en los dos temas
+- **Todo cuadrado**: se quita el redondeo de filas, buscador, tarjetas, fichas, chips, sub-pestañas, encabezados, semáforo y botones flotantes. Las banderas son la única excepción
+- **Las ligas en alerta aparecen también dentro de su continente**, ya no salen del grupo. El encabezado pasa de `N arriba` a `N con alarma`, y el primer número es el total real del continente
+- **Cuenta regresiva** al próximo partido en el bloque de alerta, actualizada cada minuto con un único temporizador. Usa el offset de Perú explícito y no la zona del teléfono
+- La fila se reparte para que **las de alerta midan lo mismo que las demás**: racha y cuenta forman una columna de 54px alineada con el nombre y el país, y la cuenta ocupa espacio vertical que ya estaba libre. Sin cuenta, la columna se centra
+- **Sub-pestañas reordenadas** a Extremos, Partidos, Próximos y Análisis, abriendo en Extremos
+- `PAISES`, el fallback, pasa de 52 a 75 países, y se suman 19 ligas nuevas del proyecto de datos
+
 ## v4.0.0 - 2026-08-01
 
 Rediseño de la pantalla principal. Con 24 ligas activas la lista plana ya obligaba a recorrerla entera para ver qué estaba por saltar.

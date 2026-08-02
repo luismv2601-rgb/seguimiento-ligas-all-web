@@ -8,28 +8,54 @@ Página web móvil para visualizar el seguimiento de las ligas activas del proye
 
 Página estática (`index.html`) optimizada para móvil que lee datos publicados como CSV desde el Google Sheet del proyecto y los muestra en tiempo real. No requiere servidor ni backend propio — es 100% gratis vía GitHub Pages.
 
-**Ligas activas:** hoy son 24 (12 europeas, 7 sudamericanas, 3 norteamericanas y 2 asiáticas). La página **no las tiene hardcodeadas**: arma la lista con lo que encuentra en la hoja `Racha_Actual`, incluida la columna `region`, así que agregar o quitar una liga en `ligas.json` del proyecto de datos se refleja acá sin tocar código.
+**Ligas activas:** hoy son 43 (24 europeas, 9 de Norte y Centroamérica, 8 sudamericanas y 2 asiáticas). La página **no las tiene hardcodeadas**: arma la lista con lo que encuentra en la hoja `Racha_Actual`, incluida la columna `region`, así que agregar o quitar una liga en `ligas.json` del proyecto de datos se refleja acá sin tocar código.
 
-## Tema claro y oscuro
+## Aspecto
 
-La paleta está en variables CSS: **claro por defecto**, y el oscuro se aplica con `data-tema="oscuro"` en `:root`. El botón es un círculo de 30px arriba a la derecha; el ícono muestra a dónde se va, no dónde se está.
+**Franja azul marino** (`#0b2545`) con el título y la hora de actualización, igual en los dos temas.
+
+**Todo cuadrado.** No hay esquinas redondeadas en ningún lado — filas, buscador, tarjetas, fichas, chips, sub-pestañas, encabezados, el semáforo y los dos botones flotantes. **La única excepción son las banderas**, que conservan 3,5px.
+
+### Tema claro y oscuro
+
+La paleta está en variables CSS: **claro por defecto**, y el oscuro se aplica con `data-tema="oscuro"` en `:root`. El botón está arriba a la derecha; el ícono muestra a dónde se va, no dónde se está.
 
 La elección se guarda en `localStorage` y se aplica en un `<script>` del `<head>`, **antes de pintar**, para que quien elige oscuro no vea un flash blanco al abrir.
 
 Los colores del semáforo, de las cards de racha y de los badges quedan fijos a propósito: son semánticos y funcionan sobre los dos fondos.
 
+### Banderas planas, no emoji
+
+`BANDERAS` en `index.html` trae **43 banderas dibujadas como SVG en línea**, en un lienzo 3×2, ~9 KB en total. Reemplazan a los emoji, que los dibuja el sistema operativo: salían ondeados, ocupaban más alto del necesario y en varios Android ni existían.
+
+Son versiones **simplificadas a propósito**: a 26px un escudo real es una mancha. Donde dos banderas del set se confundirían se agrega la forma mínima que las separa — el escudo de Eslovaquia y Eslovenia frente al tricolor ruso, la hoja de Canadá frente a Perú, y un círculo, cinco estrellas y un triángulo para los tres azul-blanco-azul centroamericanos.
+
+Llevan un borde interno de medio píxel: sin él, las que tienen blanco al borde (Polonia, Chequia) se funden con el fondo en tema claro.
+
+`PAISES` sigue existiendo como **fallback**: si se agrega una liga de un país sin bandera dibujada, sale una pastilla con su código en vez de un hueco.
+
 ### Pantalla principal — "Detalle de las ligas"
 
 - **Buscador** de texto que filtra en vivo por nombre de liga o país.
-- Un bloque **"En alerta"** arriba de todo con las ligas que superaron su umbral, sin importar el continente. No se repiten después dentro de su grupo; el encabezado del continente avisa cuántas tiene arriba.
-- Debajo, **los continentes como acordeón**, plegados por defecto: se ven solo los nombres y se despliegan al tocarlos.
-- Cada fila muestra: pastilla del país, nombre de la liga, país, **% de partidos en serie**, y a la derecha **racha actual / umbral / récord histórico** (ej. `9/5/15`) más un semáforo.
+- Un bloque **"En alerta"** arriba de todo con las ligas que superaron su umbral, sin importar el continente. **Aparecen también dentro de su continente**, no salen del grupo.
+- Debajo, **los continentes como acordeón**, plegados por defecto: se ven solo los nombres y se despliegan al tocarlos. El encabezado muestra `total · N con alarma`.
+- Cada fila muestra: bandera, nombre de la liga, país, **% de partidos en serie**, y a la derecha **racha actual / umbral / récord histórico** (ej. `9/5/15`) más un semáforo.
 
-#### Pastillas de país, no banderas
+#### Cuenta regresiva en el bloque de alerta
 
-Los emoji de bandera los dibuja el sistema operativo: salen ondeados, ocupan más alto del necesario, y en varios Android ni siquiera existen —ya se veían como dos letras—. En su lugar hay una pastilla plana con el código del país y el color dominante de su bandera (`PAISES` en `index.html`, 52 países).
+Cada liga en alerta muestra cuánto falta para su próximo partido, sacado de la hoja `Proximos`. Formato corto (`8h 32m`, `5d 11h`) porque va en una columna angosta; `sin fecha` si no hay partido en los próximos 14 días.
 
-El color del texto **se calcula por luminancia**, porque sobre el amarillo de Colombia y Ecuador o el celeste de Argentina el blanco no se lee.
+Se actualiza sola cada minuto con **un único temporizador** para todas las cuentas visibles.
+
+El instante del partido se arma con el **offset de Perú explícito** (`Date.UTC(..., hora + 5, ...)`) y no con la zona del teléfono, así la cuenta da bien aunque el usuario esté viajando.
+
+#### Cómo se reparte la fila
+
+La columna derecha se estira a lo alto de la fila. Dentro, la racha y la cuenta forman una sola columna de 54px: la racha arriba, a la altura del **nombre de la liga**, y la cuenta debajo, a la altura del **país**. El semáforo y el chevron quedan centrados.
+
+Cuando no hay cuenta —la mayoría de las filas— la columna va centrada, para que la racha no quede arriba con un hueco debajo.
+
+El resultado es que **las filas en alerta miden lo mismo que las demás**: la cuenta usa espacio vertical que la columna derecha ya tenía libre.
 
 #### El orden dentro de cada grupo
 
@@ -48,12 +74,14 @@ El segundo criterio no es cosmético. En una liga secuencial la racha es un dato
 
 ### Detalle por liga (al hacer clic en una fila)
 
-Se abre una vista propia con una card de racha vigente arriba, y 4 sub-pestañas:
+Se abre una vista propia con una card de racha vigente arriba, y 4 sub-pestañas en este orden. **Abre en Extremos**, que es lo que más se consulta:
 
-- **Análisis** — ficha con los campos de la pestaña `Analisis` del Sheet (excepto `liga_id`).
-- **Partidos** — todos los partidos de la **temporada actual** de esa liga. La temporada no se deduce de la fecha del último partido, porque en las ligas europeas la temporada 2026 se juega entre agosto de 2026 y mayo de 2027; se pregunta al Sheet con `select max(E)`.
 - **Extremos** — lee la hoja `Analisis 2`. Arriba, una escala que ubica la racha de hoy contra el umbral, el doble y el récord histórico, con una frase que interpreta dónde cayó. Abajo, un bloque por temporada con cuántas rachas llegaron al doble del umbral, qué porcentaje representan sobre los empates de esa temporada y los largos concretos como chips, con el mayor resaltado.
+- **Partidos** — todos los partidos de la **temporada actual** de esa liga. La temporada no se deduce de la fecha del último partido, porque en las ligas europeas la temporada 2026 se juega entre agosto de 2026 y mayo de 2027; se pregunta al Sheet con `select max(E)`.
 - **Próximos** — lee la hoja `Proximos`: los partidos con hora confirmada de los próximos 14 días, agrupados por día y con la distancia en lenguaje natural (hoy, mañana, en 3 días).
+- **Análisis** — ficha con los campos de la pestaña `Analisis` del Sheet (excepto `liga_id`).
+
+> El orden de los botones, el de los `<div class="subpage">`, cuál lleva `active` y la lista de `cambiarSubpagina()` tienen que coincidir. Si se desfasan, la app abre en una pestaña vacía.
 
 La última actualización del sistema (hora Perú) se muestra al inicio. Un botón flotante ↻ recarga los datos y limpia la caché de partidos.
 
