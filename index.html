@@ -48,7 +48,7 @@
     width: 30px;
     height: 30px;
     padding: 0;
-    border-radius: 50%;
+    border-radius: 0;
     border: 1px solid var(--borde);
     background: var(--superficie);
     color: var(--texto-suave);
@@ -65,9 +65,15 @@
     color: var(--texto);
     padding-bottom: 70px;
   }
-  .header { padding: 16px 16px 0 16px; }
-  h1 { font-size: 20px; margin: 0 0 4px 0; text-align: center; color: var(--texto-fuerte); }
-  .logo { width: 22px; height: 22px; vertical-align: -3px; }
+  /* Franja azul marino: mismo color en los dos temas, el titulo siempre va en blanco. */
+  .header {
+    background: #0b2545;
+    padding: 14px 16px 10px 16px;
+    margin-bottom: 14px;
+  }
+  h1 { font-size: 19px; margin: 0; text-align: center; color: #fff; }
+  .logo { width: 21px; height: 21px; vertical-align: -3px; }
+  .header-sub { text-align: center; font-size: 11px; color: rgba(255,255,255,.7); margin-top: 4px; }
   .section-heading { font-size: 15px; font-weight: 700; color: var(--texto-fuerte); margin: 4px 0 12px 0; }
 
   .page { display: none; padding: 0 16px; }
@@ -76,7 +82,7 @@
   .buscador {
     width: 100%;
     padding: 14px 16px;
-    border-radius: 12px;
+    border-radius: 0;
     border: 1px solid var(--borde);
     background: var(--superficie);
     color: var(--texto);
@@ -91,7 +97,7 @@
     justify-content: space-between;
     background: var(--superficie);
     border: 1px solid var(--borde);
-    border-radius: 10px;
+    border-radius: 0;
     padding: 9px 12px;
     margin-bottom: 5px;
     cursor: pointer;
@@ -102,7 +108,7 @@
   .fila-liga-pais { font-size: 11px; color: var(--texto-tenue); margin-top: 1px; }
   .fila-liga-serie { color: var(--texto-suave); font-weight: 600; }
   .fila-liga-derecha { display: flex; align-items: center; gap: 8px; }
-  .semaforo { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+  .semaforo { width: 11px; height: 11px; border-radius: 0; flex-shrink: 0; }
 
   .pais-pill {
     display: inline-flex;
@@ -111,13 +117,13 @@
     min-width: 30px;
     height: 21px;
     padding: 0 5px;
-    border-radius: 5px;
+    border-radius: 0;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.4px;
     flex-shrink: 0;
   }
-  .pais-pill-grande { min-width: 42px; height: 30px; font-size: 15px; border-radius: 7px; }
+  .pais-pill-grande { min-width: 42px; height: 30px; font-size: 15px; border-radius: 0; }
 
   .pais-flag {
     width: 26px;
@@ -143,13 +149,17 @@
     margin: 2px 2px 16px 2px;
   }
   .alerta-bloque { margin-bottom: 18px; }
+  .cuenta { margin-top: 3px; display: flex; flex-direction: column; gap: 1px; }
+  .cuenta-falta { font-size: 11px; font-weight: 700; color: #9d2929; }
+  .cuenta-rival { font-size: 10px; color: var(--texto-tenue); }
+  .cuenta-vacia { font-size: 10px; color: var(--texto-tenue); font-weight: 400; }
 
   .grupo-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 9px 12px; margin-bottom: 5px;
     background: var(--superficie-2);
     border: 1px solid var(--borde);
-    border-radius: 10px;
+    border-radius: 0;
     cursor: pointer;
     user-select: none;
   }
@@ -184,7 +194,7 @@
   .subtabs {
     display: flex;
     background: var(--superficie-2);
-    border-radius: 12px;
+    border-radius: 0;
     margin-bottom: 16px;
     overflow: hidden;
   }
@@ -203,7 +213,7 @@
   .subpage { display: none; }
   .subpage.active { display: block; }
 
-  .card { border-radius: 16px; padding: 20px; margin-bottom: 16px; text-align: center; }
+  .card { border-radius: 0; padding: 20px; margin-bottom: 16px; text-align: center; }
   .card-green { background: linear-gradient(135deg, #1b4332, #2d6a4f); }
   .card-yellow { background: linear-gradient(135deg, #7f5c00, #a67c00); }
   .card-red { background: linear-gradient(135deg, #6a1b1b, #9d2929); }
@@ -216,7 +226,7 @@
   .ficha-analisis {
     background: var(--superficie);
     border: 1px solid var(--borde);
-    border-radius: 12px;
+    border-radius: 0;
     overflow: hidden;
   }
   .ficha-fila {
@@ -250,9 +260,9 @@
   .escala { position: relative; height: 14px; margin: 0 2px 10px 2px; }
   .escala-track {
     position: absolute; inset: 0;
-    background: var(--superficie-2); border-radius: 7px; overflow: hidden;
+    background: var(--superficie-2); border-radius: 0; overflow: hidden;
   }
-  .escala-relleno { height: 100%; border-radius: 7px; }
+  .escala-relleno { height: 100%; border-radius: 0; }
   .escala-relleno.verde { background: linear-gradient(90deg, #1b4332, #2d6a4f); }
   .escala-relleno.amarillo { background: linear-gradient(90deg, #7f5c00, #a67c00); }
   .escala-relleno.rojo { background: linear-gradient(90deg, #6a1b1b, #9d2929); }
@@ -270,7 +280,7 @@
 
   .extremo-temp {
     background: var(--superficie); border: 1px solid var(--borde);
-    border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
+    border-radius: 0; padding: 12px 14px; margin-bottom: 8px;
   }
   .extremo-temp-head {
     display: flex; justify-content: space-between;
@@ -280,7 +290,7 @@
   .extremo-resumen { font-size: 12px; color: var(--texto-suave); text-align: right; }
   .extremo-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
-    background: var(--superficie-2); border: 1px solid var(--borde); border-radius: 8px;
+    background: var(--superficie-2); border: 1px solid var(--borde); border-radius: 0;
     padding: 4px 9px; font-size: 13px; font-weight: 700; color: var(--texto);
   }
   .chip-max { background: #6a1b1b; border-color: #9d2929; color: #fff; }
@@ -297,7 +307,7 @@
   .partido {
     background: var(--superficie);
     border: 1px solid var(--borde);
-    border-radius: 12px;
+    border-radius: 0;
     padding: 12px 14px;
     margin-bottom: 8px;
   }
@@ -311,7 +321,7 @@
     font-size: 17px;
     background: var(--superficie-2);
     padding: 4px 10px;
-    border-radius: 8px;
+    border-radius: 0;
     min-width: 50px;
     text-align: center;
   }
@@ -321,7 +331,7 @@
     font-size: 10px;
     color: #fff;
     padding: 2px 8px;
-    border-radius: 6px;
+    border-radius: 0;
   }
   .empate-badge { background: #7f5c00; }
   .modalidad-badge.paralelo { background: #2a4d6e; }
@@ -336,7 +346,7 @@
     background: #2d6a4f;
     color: #fff;
     border: none;
-    border-radius: 50%;
+    border-radius: 0;
     width: 52px;
     height: 52px;
     font-size: 22px;
@@ -348,7 +358,7 @@
 
 <div class="header">
   <h1><svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#1b4332"/><path d="M50 24 L72 40 L64 66 L36 66 L28 40 Z" fill="#ffffff"/><path d="M50 4 L50 24 M96 44 L72 40 M78 88 L64 66 M22 88 L36 66 M4 44 L28 40" stroke="#ffffff" stroke-width="8" fill="none"/></svg> Seguimiento Ligas All</h1>
-  <div id="ultimaEjecucion" style="text-align:center; font-size:11px; color:#7d8290; margin-bottom:12px;"></div>
+  <div id="ultimaEjecucion" class="header-sub"></div>
 </div>
 
 <div class="page active" id="pageLista">
@@ -734,7 +744,57 @@ function alternarGrupo(id) {
   try { localStorage.setItem("gruposAbiertos", JSON.stringify([...abiertos])); } catch (e) { /* modo privado */ }
 }
 
-function filaLigaHTML(liga) {
+// El Sheet guarda fecha y hora en hora Peru (UTC-5). Se arma el instante absoluto
+// con ese offset explicito y no con la zona del telefono, asi la cuenta da bien
+// aunque el usuario este viajando.
+function instanteDePartido(fecha, hora) {
+  const f = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(fecha || "").trim());
+  const h = /^(\d{1,2}):(\d{2})$/.exec(String(hora || "").trim());
+  if (!f || !h) return null;
+  return Date.UTC(+f[1], +f[2] - 1, +f[3], +h[1] + 5, +h[2]);
+}
+
+function proximoPartidoDe(ligaId) {
+  const ahora = Date.now();
+  let mejor = null;
+  datosProximos.forEach(p => {
+    if (p.liga_id !== ligaId) return;
+    const t = instanteDePartido(p.fecha, p.hora_peru);
+    if (t === null || t < ahora) return;
+    if (mejor === null || t < mejor.t) mejor = { t, p };
+  });
+  return mejor;
+}
+
+function textoFalta(ms) {
+  if (ms <= 0) return "en juego o por comenzar";
+  const min = Math.floor(ms / 60000);
+  const dias = Math.floor(min / 1440);
+  const horas = Math.floor((min % 1440) / 60);
+  const mins = min % 60;
+  if (dias > 0) return `faltan ${dias}d ${horas}h`;
+  if (horas > 0) return `faltan ${horas}h ${mins}m`;
+  return `faltan ${mins}m`;
+}
+
+function cuentaRegresivaHTML(ligaId) {
+  const prox = proximoPartidoDe(ligaId);
+  if (!prox) return '<div class="cuenta cuenta-vacia">Sin partido programado</div>';
+  return `<div class="cuenta" data-liga="${ligaId}" data-t="${prox.t}">` +
+    `<span class="cuenta-falta">${textoFalta(prox.t - Date.now())}</span>` +
+    `<span class="cuenta-rival">${prox.p.equipo_local} vs ${prox.p.equipo_visitante} · ${prox.p.fecha} ${prox.p.hora_peru}</span></div>`;
+}
+
+// Un solo temporizador para todas las cuentas visibles.
+function refrescarCuentas() {
+  document.querySelectorAll(".cuenta[data-t]").forEach(el => {
+    const span = el.querySelector(".cuenta-falta");
+    if (span) span.textContent = textoFalta(Number(el.dataset.t) - Date.now());
+  });
+}
+setInterval(refrescarCuentas, 60000);
+
+function filaLigaHTML(liga, conCuenta) {
   const info = datosRacha.find(r => r.liga_id === liga.id);
   const racha = info ? parseInt(info.racha_actual || "0") : null;
   const umbral = info ? parseInt(info.umbral_alerta || "5") : 5;
@@ -750,6 +810,7 @@ function filaLigaHTML(liga) {
           <div class="fila-liga-pais">${liga.pais}${
             liga.pctTexto ? ` · <span class="fila-liga-serie">${liga.pctTexto}% en serie</span>` : ""
           }</div>
+          ${conCuenta ? cuentaRegresivaHTML(liga.id) : ""}
         </div>
       </div>
       <div class="fila-liga-derecha">
@@ -778,20 +839,20 @@ function renderLista(listaLigas, plano) {
   }
 
   const enAlerta = listaLigas.filter(l => l.rango === 0);
-  const resto = listaLigas.filter(l => l.rango !== 0);
 
   let html = "";
   if (enAlerta.length) {
     html += `<div class="alerta-bloque">
       <div class="alerta-titulo"><span class="semaforo semaforo-rojo"></span>En alerta (${enAlerta.length})</div>
-      ${enAlerta.map(filaLigaHTML).join("")}
+      ${enAlerta.map(l => filaLigaHTML(l, true)).join("")}
     </div>`;
   } else {
     html += '<div class="sin-alertas">Ninguna liga superó su umbral ahora mismo.</div>';
   }
 
+  // Las que estan en alerta aparecen tambien dentro de su continente, no solo arriba.
   const porRegion = {};
-  resto.forEach(l => { (porRegion[l.region] = porRegion[l.region] || []).push(l); });
+  listaLigas.forEach(l => { (porRegion[l.region] = porRegion[l.region] || []).push(l); });
 
   const regiones = Object.keys(porRegion).sort((a, b) => {
     const ia = ORDEN_CONTINENTES.indexOf(a), ib = ORDEN_CONTINENTES.indexOf(b);
@@ -804,15 +865,15 @@ function renderLista(listaLigas, plano) {
   const abiertos = leerGruposAbiertos();
   regiones.forEach(region => {
     const ligasDelGrupo = porRegion[region];
-    const alertasAca = enAlerta.filter(l => l.region === region).length;
+    const conAlarma = ligasDelGrupo.filter(l => l.rango === 0).length;
     const cerrado = !abiertos.has(region); // plegado salvo que el usuario lo haya abierto
     html += `
       <div class="grupo ${cerrado ? "cerrado" : ""}" id="grupo-${slug(region)}" data-region="${escaparAtributo(region)}">
         <div class="grupo-header" onclick="alternarGrupo('${slug(region)}')">
           <span class="grupo-nombre">${region}</span>
-          <span class="grupo-meta">${ligasDelGrupo.length}${alertasAca ? ` · ${alertasAca} arriba` : ""}<span class="grupo-flecha">▾</span></span>
+          <span class="grupo-meta">${ligasDelGrupo.length}${conAlarma ? ` · ${conAlarma} con alarma` : ""}<span class="grupo-flecha">▾</span></span>
         </div>
-        <div class="grupo-contenido">${ligasDelGrupo.map(filaLigaHTML).join("")}</div>
+        <div class="grupo-contenido">${ligasDelGrupo.map(l => filaLigaHTML(l)).join("")}</div>
       </div>
     `;
   });
