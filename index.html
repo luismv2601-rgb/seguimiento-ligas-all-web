@@ -149,9 +149,8 @@
     margin: 2px 2px 16px 2px;
   }
   .alerta-bloque { margin-bottom: 18px; }
-  .cuenta { margin-top: 3px; display: flex; flex-direction: column; gap: 1px; }
+  .cuenta { margin-top: 2px; }
   .cuenta-falta { font-size: 11px; font-weight: 700; color: #9d2929; }
-  .cuenta-rival { font-size: 10px; color: var(--texto-tenue); }
   .cuenta-vacia { font-size: 10px; color: var(--texto-tenue); font-weight: 400; }
 
   .grupo-header {
@@ -381,16 +380,16 @@
   <div id="detalleRachaCard"></div>
 
   <div class="subtabs">
-    <button class="subtab-btn active" id="subtabBtnAnalisis" onclick="cambiarSubpagina('analisis')">Análisis</button>
+    <button class="subtab-btn active" id="subtabBtnExtremos" onclick="cambiarSubpagina('extremos')">Extremos</button>
     <button class="subtab-btn" id="subtabBtnPartidos" onclick="cambiarSubpagina('partidos')">Partidos</button>
-    <button class="subtab-btn" id="subtabBtnExtremos" onclick="cambiarSubpagina('extremos')">Extremos</button>
     <button class="subtab-btn" id="subtabBtnProximos" onclick="cambiarSubpagina('proximos')">Próximos</button>
+    <button class="subtab-btn" id="subtabBtnAnalisis" onclick="cambiarSubpagina('analisis')">Análisis</button>
   </div>
 
-  <div class="subpage active" id="subpageAnalisis"></div>
+  <div class="subpage active" id="subpageExtremos"></div>
   <div class="subpage" id="subpagePartidos"></div>
-  <div class="subpage" id="subpageExtremos"></div>
   <div class="subpage" id="subpageProximos"></div>
+  <div class="subpage" id="subpageAnalisis"></div>
 </div>
 
 <button class="tema-btn" id="temaBtn" onclick="alternarTema()" title="Cambiar entre claro y oscuro">☾</button>
@@ -635,7 +634,7 @@ function parseCeldaExtremo(texto) {
 }
 
 function cambiarSubpagina(sub) {
-  ["Analisis", "Partidos", "Extremos", "Proximos"].forEach(nombre => {
+  ["Extremos", "Partidos", "Proximos", "Analisis"].forEach(nombre => {
     const activa = sub === nombre.toLowerCase();
     document.getElementById("subpage" + nombre).classList.toggle("active", activa);
     document.getElementById("subtabBtn" + nombre).classList.toggle("active", activa);
@@ -781,8 +780,7 @@ function cuentaRegresivaHTML(ligaId) {
   const prox = proximoPartidoDe(ligaId);
   if (!prox) return '<div class="cuenta cuenta-vacia">Sin partido programado</div>';
   return `<div class="cuenta" data-liga="${ligaId}" data-t="${prox.t}">` +
-    `<span class="cuenta-falta">${textoFalta(prox.t - Date.now())}</span>` +
-    `<span class="cuenta-rival">${prox.p.equipo_local} vs ${prox.p.equipo_visitante} · ${prox.p.fecha} ${prox.p.hora_peru}</span></div>`;
+    `<span class="cuenta-falta">${textoFalta(prox.t - Date.now())}</span></div>`;
 }
 
 // Un solo temporizador para todas las cuentas visibles.
@@ -949,7 +947,7 @@ function mostrarDetalleLiga(ligaId) {
   // --- Sub-pestaña Próximos ---
   renderProximos(ligaId);
 
-  cambiarSubpagina("analisis");
+  cambiarSubpagina("extremos");
 }
 
 function textoCuando(dias) {
