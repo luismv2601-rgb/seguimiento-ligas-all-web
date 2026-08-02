@@ -119,6 +119,18 @@
   }
   .pais-pill-grande { min-width: 42px; height: 30px; font-size: 15px; border-radius: 7px; }
 
+  .pais-flag {
+    width: 26px;
+    height: 17.5px;
+    border-radius: 3.5px;
+    flex-shrink: 0;
+    display: block;
+    /* Borde interno: sin el, las banderas con blanco al borde (Polonia, Chequia)
+       se funden con el fondo en tema claro. */
+    box-shadow: inset 0 0 0 .5px rgba(0,0,0,.35);
+  }
+  .pais-flag-grande { width: 42px; height: 28px; border-radius: 5px; }
+
   /* --- Agrupacion por continente --- */
   .alerta-titulo {
     display: flex; align-items: center; gap: 7px;
@@ -445,6 +457,77 @@ function pastillaDe(pais, clase) {
   return `<span class="pais-pill ${clase || ""}" style="background:${fondo};color:${textoSobre(fondo)}">${codigoDe(pais)}</span>`;
 }
 
+// --- Banderas planas, dibujadas en un lienzo de 3x2 ---
+// Son versiones simplificadas: a 26px un escudo real es una mancha. Donde dos
+// banderas del set se confundirian (las tres eslavas, Peru y Canada, los tres
+// azul-blanco-azul centroamericanos) se agrega una forma minima que las separa.
+const h3 = (a, b, c) => `<rect width="3" height="2" fill="${a}"/><rect y=".667" width="3" height=".666" fill="${b}"/><rect y="1.333" width="3" height=".667" fill="${c}"/>`;
+const v3 = (a, b, c) => `<rect width="3" height="2" fill="${a}"/><rect x="1" width="1" height="2" fill="${b}"/><rect x="2" width="1" height="2" fill="${c}"/>`;
+const h2 = (a, b) => `<rect width="3" height="2" fill="${a}"/><rect y="1" width="3" height="1" fill="${b}"/>`;
+const nordica = (bg, cruz) => `<rect width="3" height="2" fill="${bg}"/><rect x=".8" width=".45" height="2" fill="${cruz}"/><rect y=".78" width="3" height=".45" fill="${cruz}"/>`;
+
+const BANDERAS = {
+  // --- Europa ---
+  "Polonia": h2("#fff", "#dc143c"),
+  "Bielorrusia": `<rect width="3" height="2" fill="#c8313e"/><rect y="1.35" width="3" height=".65" fill="#4aa657"/><rect width=".4" height="2" fill="#fff"/>`,
+  "Armenia": h3("#d90012", "#0033a0", "#f2a800"),
+  "Letonia": `<rect width="3" height="2" fill="#9e3039"/><rect y=".8" width="3" height=".4" fill="#fff"/>`,
+  "Noruega": `<rect width="3" height="2" fill="#ba0c2f"/><rect x=".72" width=".6" height="2" fill="#fff"/><rect y=".7" width="3" height=".6" fill="#fff"/><rect x=".87" width=".3" height="2" fill="#00205b"/><rect y=".85" width="3" height=".3" fill="#00205b"/>`,
+  "Suecia": nordica("#006aa7", "#fecc00"),
+  "Dinamarca": nordica("#c60c30", "#fff"),
+  "Suiza": `<rect width="3" height="2" fill="#d52b1e"/><rect x="1.28" y=".38" width=".44" height="1.24" fill="#fff"/><rect x=".88" y=".78" width="1.24" height=".44" fill="#fff"/>`,
+  "Rumania": v3("#002b7f", "#fcd116", "#ce1126"),
+  "Rusia": h3("#fff", "#0039a6", "#d52b1e"),
+  "Escocia": `<rect width="3" height="2" fill="#005eb8"/><path d="M0 0L3 2M3 0L0 2" stroke="#fff" stroke-width=".38" fill="none"/>`,
+  "Austria": h3("#ed2939", "#fff", "#ed2939"),
+  "Ucrania": h2("#0057b7", "#ffd700"),
+  "Croacia": `${h3("#ff0000", "#fff", "#171796")}<rect x="1.25" y=".55" width=".5" height=".5" fill="#ff0000"/><rect x="1.5" y=".55" width=".25" height=".25" fill="#fff"/><rect x="1.25" y=".8" width=".25" height=".25" fill="#fff"/>`,
+  "Serbia": h3("#c6363c", "#0c4076", "#fff"),
+  "Chequia": `${h2("#fff", "#d7141a")}<path d="M0 0L1.35 1L0 2z" fill="#11457e"/>`,
+  // Eslovaquia y Eslovenia comparten el tricolor con Rusia: el escudo las separa.
+  "Eslovaquia": `${h3("#fff", "#0b4ea2", "#ee1c25")}<path d="M.55 .5h.7v.75q0 .35-.35 .5-.35-.15-.35-.5z" fill="#ee1c25" stroke="#fff" stroke-width=".1"/>`,
+  "Eslovenia": `${h3("#fff", "#005da4", "#ed1c24")}<path d="M.5 .35h.65v.6q0 .3-.325 .42-.325-.12-.325-.42z" fill="#005da4" stroke="#fff" stroke-width=".09"/>`,
+  "Hungría": h3("#cd2a3e", "#fff", "#436f4d"),
+  "Bulgaria": h3("#fff", "#00966e", "#d62612"),
+  "Macedonia": `<rect width="3" height="2" fill="#d20000"/><circle cx="1.5" cy="1" r=".42" fill="#f8e71c"/><path d="M1.5 1L0 0M1.5 1L3 0M1.5 1L0 2M1.5 1L3 2M1.5 1L1.5-.2M1.5 1L1.5 2.2M1.5 1L-.2 1M1.5 1L3.2 1" stroke="#f8e71c" stroke-width=".16"/>`,
+  "Montenegro": `<rect width="3" height="2" fill="#c40308"/><rect x=".12" y=".08" width="2.76" height="1.84" fill="none" stroke="#d4af37" stroke-width=".16"/><circle cx="1.5" cy="1" r=".38" fill="#d4af37"/>`,
+  "Luxemburgo": h3("#ea141d", "#fff", "#00a1de"),
+  "Gales": `${h2("#fff", "#00ab39")}<path d="M.8 1.1q.3-.5 .8-.3 .4 .15 .8 0 .1 .35-.3 .5-.5 .2-.8 .1-.3-.1-.5-.3z" fill="#c8102e"/>`,
+
+  // --- Norte y Centroamerica ---
+  "México": `${v3("#006847", "#fff", "#ce1126")}<circle cx="1.5" cy="1" r=".26" fill="#8b5a2b"/>`,
+  "Costa Rica": `<rect width="3" height="2" fill="#002b7f"/><rect y=".33" width="3" height="1.34" fill="#fff"/><rect y=".67" width="3" height=".66" fill="#ce1126"/>`,
+  "Estados Unidos": `<rect width="3" height="2" fill="#fff"/><rect width="3" height=".28" fill="#b22234"/><rect y=".56" width="3" height=".28" fill="#b22234"/><rect y="1.12" width="3" height=".28" fill="#b22234"/><rect y="1.68" width="3" height=".28" fill="#b22234"/><rect width="1.3" height="1.1" fill="#3c3b6e"/>`,
+  "Canadá": `${v3("#d80621", "#fff", "#d80621")}<path d="M1.5 .55l.16 .34 .34-.1-.18 .35 .28 .1-.34 .18 .06 .3-.32-.16-.32 .16 .06-.3-.34-.18 .28-.1-.18-.35 .34 .1z" fill="#d80621"/>`,
+  "Panamá": `<rect width="3" height="2" fill="#fff"/><rect x="1.5" width="1.5" height="1" fill="#d21034"/><rect y="1" width="1.5" height="1" fill="#005293"/><path d="M.75 .3l.13 .28 .3-.04-.2 .24 .2 .24-.3-.04-.13 .28-.13-.28-.3 .04 .2-.24-.2-.24 .3 .04z" fill="#005293"/>`,
+  "Guatemala": v3("#4997d0", "#fff", "#4997d0"),
+  // El Salvador, Honduras y Nicaragua son azul-blanco-azul: cada una lleva su marca.
+  "El Salvador": `${h3("#0f47af", "#fff", "#0f47af")}<circle cx="1.5" cy="1" r=".22" fill="none" stroke="#0f47af" stroke-width=".1"/>`,
+  "Honduras": `${h3("#0073cf", "#fff", "#0073cf")}<circle cx="1.5" cy="1" r=".1" fill="#0073cf"/><circle cx="1.1" cy=".85" r=".1" fill="#0073cf"/><circle cx="1.9" cy=".85" r=".1" fill="#0073cf"/><circle cx="1.1" cy="1.15" r=".1" fill="#0073cf"/><circle cx="1.9" cy="1.15" r=".1" fill="#0073cf"/>`,
+  "Nicaragua": `${h3("#0067c6", "#fff", "#0067c6")}<path d="M1.5 .78l.3 .44h-.6z" fill="#0067c6"/>`,
+
+  // --- Sudamerica ---
+  "Perú": v3("#d91023", "#fff", "#d91023"),
+  "Brasil": `<rect width="3" height="2" fill="#009c3b"/><path d="M1.5 .22L2.78 1 1.5 1.78 .22 1z" fill="#ffdf00"/><circle cx="1.5" cy="1" r=".38" fill="#002776"/>`,
+  "Argentina": `${h3("#74acdf", "#fff", "#74acdf")}<circle cx="1.5" cy="1" r=".22" fill="#f6b40e"/>`,
+  "Colombia": `<rect width="3" height="2" fill="#fcd116"/><rect y="1" width="3" height=".5" fill="#003893"/><rect y="1.5" width="3" height=".5" fill="#ce1126"/>`,
+  "Chile": `${h2("#fff", "#d52b1e")}<rect width="1" height="1" fill="#0039a6"/><path d="M.5 .25l.12 .26 .28-.04-.19 .22 .19 .22-.28-.04-.12 .26-.12-.26-.28 .04 .19-.22-.19-.22 .28 .04z" fill="#fff"/>`,
+  // Ecuador comparte el amarillo-azul-rojo con Colombia: el escudo la separa.
+  "Ecuador": `<rect width="3" height="2" fill="#ffdd00"/><rect y="1" width="3" height=".5" fill="#034ea2"/><rect y="1.5" width="3" height=".5" fill="#ed1c24"/><circle cx="1.5" cy="1" r=".3" fill="#ffdd00" stroke="#034ea2" stroke-width=".08"/>`,
+  "Venezuela": `<rect width="3" height="2" fill="#fcd116"/><rect y=".667" width="3" height=".666" fill="#00247d"/><rect y="1.333" width="3" height=".667" fill="#cf142b"/><circle cx="1.5" cy="1" r=".07" fill="#fff"/><circle cx="1.1" cy=".92" r=".07" fill="#fff"/><circle cx="1.9" cy=".92" r=".07" fill="#fff"/><circle cx="1.25" cy="1.14" r=".07" fill="#fff"/><circle cx="1.75" cy="1.14" r=".07" fill="#fff"/>`,
+  "Bolivia": h3("#d52b1e", "#f9e300", "#007934"),
+
+  // --- Asia ---
+  "Corea del Sur": `<rect width="3" height="2" fill="#fff"/><path d="M1.5 .62a.38 .38 0 010 .76 .38 .38 0 000 .76 .76 .76 0 010-1.52z" fill="#cd2e3a"/><path d="M1.5 .62a.38 .38 0 000 .76 .38 .38 0 010 .76 .76 .76 0 000-1.52z" fill="#0047a0"/><rect x=".3" y=".45" width=".42" height=".1" fill="#000"/><rect x="2.28" y="1.45" width=".42" height=".1" fill="#000"/>`,
+  "China": `<rect width="3" height="2" fill="#de2910"/><path d="M.6 .35l.16 .33 .36-.05-.26 .26 .06 .36-.32-.17-.32 .17 .06-.36-.26-.26 .36 .05z" fill="#ffde00"/><circle cx="1.25" cy=".28" r=".09" fill="#ffde00"/><circle cx="1.5" cy=".52" r=".09" fill="#ffde00"/><circle cx="1.5" cy=".85" r=".09" fill="#ffde00"/><circle cx="1.25" cy="1.08" r=".09" fill="#ffde00"/>`,
+};
+
+function banderaDe(pais, grande) {
+  const svg = BANDERAS[pais];
+  if (!svg) return pastillaDe(pais, grande ? "pais-pill-grande" : ""); // sin bandera, cae a la pastilla
+  return `<svg class="pais-flag ${grande ? "pais-flag-grande" : ""}" viewBox="0 0 3 2" preserveAspectRatio="none" role="img" aria-label="${escaparAtributo(pais)}">${svg}</svg>`;
+}
+
 const ETIQUETAS_ANALISIS = {
   pais: "País",
   liga: "Liga",
@@ -661,7 +744,7 @@ function filaLigaHTML(liga) {
   return `
     <div class="fila-liga" onclick="mostrarDetalleLiga('${liga.id}')">
       <div class="fila-liga-izq">
-        ${pastillaDe(liga.pais)}
+        ${banderaDe(liga.pais)}
         <div>
           <div class="fila-liga-nombre">${liga.nombre}</div>
           <div class="fila-liga-pais">${liga.pais}${
@@ -757,7 +840,7 @@ function mostrarDetalleLiga(ligaId) {
 
   document.getElementById("pageLista").classList.remove("active");
   document.getElementById("pageDetalleLiga").classList.add("active");
-  document.getElementById("detalleBandera").innerHTML = pastillaDe(liga.pais, "pais-pill-grande");
+  document.getElementById("detalleBandera").innerHTML = banderaDe(liga.pais, true);
   document.getElementById("detalleNombre").textContent = liga.nombre;
   document.getElementById("detallePais").textContent = liga.pais;
 
