@@ -412,6 +412,9 @@ const PAISES = {
   "México": ["MX", "#006847"], "Colombia": ["CO", "#fcd116"], "Chile": ["CL", "#0039a6"],
   "Ecuador": ["EC", "#ffdd00"], "Uruguay": ["UY", "#0038a8"], "Paraguay": ["PY", "#d52b1e"],
   "Venezuela": ["VE", "#00247d"], "Costa Rica": ["CR", "#ce1126"],
+  "Bolivia": ["BO", "#007934"], "Canadá": ["CA", "#d80621"], "Panamá": ["PA", "#005293"],
+  "Guatemala": ["GT", "#4997d0"], "El Salvador": ["SV", "#0f47af"],
+  "Honduras": ["HN", "#0073cf"], "Nicaragua": ["NI", "#0067c6"],
   "Estados Unidos": ["US", "#3c3b6e"], "Arabia Saudita": ["SA", "#006c35"],
   "Japón": ["JP", "#bc002d"], "Corea del Sur": ["KR", "#003478"],
   "Australia": ["AU", "#00247d"], "China": ["CN", "#de2910"],
@@ -612,7 +615,7 @@ function colorSemaforo(racha, umbral) {
 
 // Los americanos primero: es de donde salio el proyecto y son las que mas se miran.
 // Lo que no este en la lista se agrega al final por orden alfabetico.
-const ORDEN_CONTINENTES = ["Sudamérica", "Norteamérica", "Europa", "Asia"];
+const ORDEN_CONTINENTES = ["Sudamérica", "Norte y Centroamérica", "Europa", "Asia"];
 
 function escaparAtributo(texto) {
   return String(texto).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
