@@ -277,10 +277,23 @@
     margin: 2px 2px 10px 2px;
   }
 
-  /* --- Sub-pestaña Extremos --- */
-  .extremo-pregunta { font-size: 13px; color: var(--texto-suave); margin: 16px 2px 14px 2px; }
+  /* --- Escala "qué tan rara es esta racha" --- */
+  .extremo-pregunta { font-size: 14px; color: var(--texto-suave); margin: 16px 2px 14px 2px; text-align: center; }
 
-  .escala { position: relative; height: 14px; margin: 0 2px 10px 2px; }
+  /* Tres bandas apiladas: las referencias fijas (umbral, doble, récord) arriba de
+     la barra, la barra en el medio, y la racha de ahora abajo. Cada etiqueta se
+     posiciona con left:% sobre el mismo eje que usa la barra, asi cae justo encima
+     del valor que nombra. */
+  .escala-wrap { position: relative; margin: 0 2px; }
+  .escala-marcas, .escala-abajo { position: relative; height: 36px; }
+  .escala-marcas .marca { position: absolute; bottom: 2px; }
+  .escala-abajo .marca { position: absolute; top: 2px; }
+
+  .marca { display: flex; flex-direction: column; line-height: 1.15; white-space: nowrap; }
+  .marca-txt { font-size: 12px; opacity: 0.8; }
+  .marca-num { font-size: 17px; font-weight: 700; }
+
+  .escala { position: relative; height: 14px; }
   .escala-track {
     position: absolute; inset: 0;
     background: var(--superficie-2); border-radius: 0; overflow: hidden;
@@ -291,26 +304,30 @@
     background: var(--texto-tenue); transform: translateX(-1px);
   }
 
-  .escala-leyenda {
-    display: flex; flex-wrap: wrap; gap: 4px 14px;
-    font-size: 11px; color: var(--texto-tenue); margin: 0 2px 6px 2px;
+  /* Marcador de la racha de ahora: atraviesa la barra entera y sobresale para
+     abajo, donde esta su etiqueta. Va en un color propio y no en el de las marcas
+     fijas justamente para que se lea como "el dato" y no como otra referencia. */
+  .escala-ahora {
+    position: absolute; top: -6px; width: 3px; height: 30px;
+    background: #0d1b2a; transform: translateX(-1.5px);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.85);
   }
-  .escala-leyenda b { color: var(--texto); }
-  .escala-frase { font-size: 13px; color: var(--texto); margin: 10px 2px 18px 2px; }
+
+  .escala-frase { font-size: 13px; color: var(--texto); margin: 10px 2px 18px 2px; text-align: center; }
 
   /* La misma escala, pero dentro del cuadro de color del detalle de liga. Ahi el
      fondo ya es verde/amarillo/rojo, asi que los colores del tema no se leen: todo
      pasa a blanco con transparencias. El relleno va blanco solido porque el
      degradado original es del mismo color que el cuadro y quedaria invisible. */
-  .card-extremos { text-align: left; }
-  .card-extremos .extremo-pregunta { color: rgba(255,255,255,0.8); margin: 0 0 12px 0; }
-  .card-extremos .escala { margin: 0 0 10px 0; }
+  .card-extremos { text-align: left; color: #fff; }
+  .card-extremos .extremo-pregunta { color: rgba(255,255,255,0.85); margin: 0 0 10px 0; }
+  .card-extremos .escala-wrap { margin: 0; }
   .card-extremos .escala-track { background: rgba(255,255,255,0.22); }
   .card-extremos .escala-relleno { background: rgba(255,255,255,0.92); }
-  .card-extremos .escala-tick { background: rgba(255,255,255,0.75); }
-  .card-extremos .escala-leyenda { color: rgba(255,255,255,0.75); margin: 0 0 6px 0; }
-  .card-extremos .escala-leyenda b { color: #fff; }
-  .card-extremos .escala-frase { color: rgba(255,255,255,0.92); margin: 10px 0 0 0; }
+  /* Oscuros y no blancos: sobre el tramo ya relleno de blanco, un tick blanco
+     desaparece. */
+  .card-extremos .escala-tick { background: rgba(0,0,0,0.32); }
+  .card-extremos .escala-frase { color: rgba(255,255,255,0.92); margin: 8px 0 0 0; }
 
   .extremo-temp {
     background: var(--superficie); border: 1px solid var(--borde);
@@ -1077,6 +1094,39 @@ function htmlRarezaRacha(info, rachaActual, umbral) {
   const tope = Math.max(record, doble, rachaActual, 1) * 1.08;
   const pos = v => Math.max(0, Math.min(100, (v / tope) * 100));
 
+  // Cerca de los bordes la etiqueta se apoya contra el borde en vez de centrarse
+  // sobre su marca: centrada se saldria del cuadro y quedaria cortada.
+  const ubicar = p => p < 12
+    ? `left:${p}%; align-items:flex-start;`
+    : p > 88
+      ? `right:${100 - p}%; align-items:flex-end;`
+      : `left:${p}%; transform:translateX(-50%); align-items:center;`;
+
+  // Referencias fijas de la liga. Se agrupan las que caen tan cerca que se
+  // pisarian (pasa cuando el récord es igual al doble, o casi).
+  const refs = [{ t: "Umbral", v: umbral }, { t: "Doble", v: doble }];
+  if (record) refs.push({ t: "Récord", v: record });
+  refs.sort((a, b) => a.v - b.v);
+
+  const grupos = [];
+  refs.forEach(m => {
+    const ultimo = grupos[grupos.length - 1];
+    if (ultimo && Math.abs(pos(m.v) - pos(ultimo[ultimo.length - 1].v)) < 11) ultimo.push(m);
+    else grupos.push([m]);
+  });
+
+  const marcasArriba = grupos.map(g => {
+    const p = pos(g[g.length - 1].v);
+    const numeros = [...new Set(g.map(m => m.v))].join("/");
+    return `<div class="marca" style="${ubicar(p)}">
+        <span class="marca-txt">${g.map(m => m.t).join("/")}</span>
+        <span class="marca-num">${numeros}</span>
+      </div>`;
+  }).join("");
+
+  const ticks = refs.map(m => `<div class="escala-tick" style="left:${pos(m.v)}%"></div>`).join("");
+  const pAhora = pos(rachaActual);
+
   let frase;
   if (rachaActual === 0) frase = "Sin racha activa: el último partido fue empate.";
   else if (record && rachaActual >= record) frase = `Está en su máximo histórico (${record}).`;
@@ -1086,16 +1136,19 @@ function htmlRarezaRacha(info, rachaActual, umbral) {
 
   return `
     <div class="extremo-pregunta">¿Qué tan rara es esta racha?</div>
-    <div class="escala">
-      <div class="escala-track"><div class="escala-relleno" style="width:${pos(rachaActual)}%"></div></div>
-      <div class="escala-tick" style="left:${pos(umbral)}%"></div>
-      <div class="escala-tick" style="left:${pos(doble)}%"></div>
-    </div>
-    <div class="escala-leyenda">
-      <span>Ahora <b>${rachaActual}</b></span>
-      <span>Umbral <b>${umbral}</b></span>
-      <span>Doble <b>${doble}</b></span>
-      <span>Récord <b>${record || "-"}</b></span>
+    <div class="escala-wrap">
+      <div class="escala-marcas">${marcasArriba}</div>
+      <div class="escala">
+        <div class="escala-track"><div class="escala-relleno" style="width:${pAhora}%"></div></div>
+        ${ticks}
+        <div class="escala-ahora" style="left:${pAhora}%"></div>
+      </div>
+      <div class="escala-abajo">
+        <div class="marca" style="${ubicar(pAhora)}">
+          <span class="marca-num">${rachaActual}</span>
+          <span class="marca-txt">Ahora</span>
+        </div>
+      </div>
     </div>
     <div class="escala-frase">${frase}</div>
   `;

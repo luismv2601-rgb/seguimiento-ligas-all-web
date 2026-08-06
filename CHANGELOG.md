@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.2.0 - 2026-08-06
+
+Rediseño de la escala del cuadro de detalle. Antes los cuatro valores iban en una fila de texto debajo de la barra, sin relación visual con el punto que nombraban.
+
+- **Umbral, doble y récord pasan arriba de la barra**, cada uno posicionado sobre el punto exacto que le corresponde en la escala
+- **La racha de ahora va debajo**, con un marcador propio que atraviesa la barra entera. Va en azul oscuro y no en el color de las marcas fijas, para que se lea como el dato y no como otra referencia
+- Textos de 11 a **12px** y números de 11 a **17px en negrita**
+- **"¿Qué tan rara es esta racha?" y la frase quedan centradas**
+- Las referencias que caen demasiado cerca se fusionan en una sola etiqueta (`Doble/Récord 12`), que es lo que pasa cuando el récord de una liga coincide con el doble de su umbral. Y contra los bordes la etiqueta se apoya en el borde en vez de centrarse, si no quedaba cortada cuando la racha está en 0 o en su máximo
+- Los ticks de referencia pasan a oscuros: sobre el tramo ya relleno de blanco, un tick blanco desaparecía
+
 ## v5.1.0 - 2026-08-06
 
 - **El bloque "En alerta" se ordena por quién juega antes**, y a igualdad de horario por mayor % en serie. Antes mandaba el % en serie y la proximidad solo desempataba, así que una racha viva que jugaba en 2 horas podía quedar debajo de una que jugaba el sábado. Las que no tienen partido programado van al final
