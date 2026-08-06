@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.0 - 2026-08-06
+
+- **El bloque "En alerta" se ordena por quién juega antes**, y a igualdad de horario por mayor % en serie. Antes mandaba el % en serie y la proximidad solo desempataba, así que una racha viva que jugaba en 2 horas podía quedar debajo de una que jugaba el sábado. Las que no tienen partido programado van al final
+- **El cuadro de color del detalle pasa a mostrar "¿Qué tan rara es esta racha?"**: la barra con las marcas de umbral y doble, la leyenda Ahora/Umbral/Doble/Récord y la frase. Reemplaza al número grande de racha, al texto "partidos consecutivos sin empate", a la etiqueta y a la fecha de actualización — la racha y el umbral ya estaban en la leyenda, y la fecha ya está en el encabezado. La sub-pestaña Extremos queda solo con las rachas por temporada
+- La escala dentro del cuadro va en blanco sobre el fondo de color: el relleno original era un degradado del mismo color que el cuadro y habría quedado invisible
+- **Bandera y "← Volver" en la misma fila**, la bandera a la izquierda y el botón a la derecha. El botón estaba arriba de todo, en su propia línea
+- Si una liga todavía no tiene fila en `Analisis 2` (recién agregada, esa pestaña se regenera una vez por día), el cuadro cae al formato viejo con el número grande
+
 ## v5.0.0 - 2026-08-02
 
 Rediseño visual y salto de 24 a 43 ligas.

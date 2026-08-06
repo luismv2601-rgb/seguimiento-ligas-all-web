@@ -196,17 +196,22 @@
   .fila-liga-sindatos { font-size: 12px; color: var(--texto-tenue); }
   .chevron { color: var(--chevron); font-size: 16px; }
 
+  /* Va en la misma fila que la bandera, empujado a la derecha por el titulo. */
   .volver-btn {
     background: none;
     border: none;
     color: var(--texto-suave);
     font-size: 14px;
     font-weight: 600;
-    padding: 8px 0 16px 0;
+    padding: 8px 0;
     cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
-  .detalle-liga-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .detalle-liga-bandera { display: flex; }
+  .detalle-liga-header { display: flex; align-items: center; gap: 10px; padding-top: 8px; margin-bottom: 14px; }
+  .detalle-liga-titulo { min-width: 0; flex: 1; }
+  .detalle-liga-nombre, .detalle-liga-pais { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .detalle-liga-bandera { display: flex; flex-shrink: 0; }
   .detalle-liga-nombre { font-size: 18px; font-weight: 700; color: var(--texto-fuerte); }
   .detalle-liga-pais { font-size: 12px; color: var(--texto-tenue); }
 
@@ -240,7 +245,6 @@
 
   .racha-numero { font-size: 44px; font-weight: 700; color: #fff; line-height: 1; }
   .racha-label { font-size: 13px; color: rgba(255,255,255,0.85); margin-top: 4px; }
-  .racha-fecha { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 8px; }
 
   .ficha-analisis {
     background: var(--superficie);
@@ -281,10 +285,7 @@
     position: absolute; inset: 0;
     background: var(--superficie-2); border-radius: 0; overflow: hidden;
   }
-  .escala-relleno { height: 100%; border-radius: 0; }
-  .escala-relleno.verde { background: linear-gradient(90deg, #1b4332, #2d6a4f); }
-  .escala-relleno.amarillo { background: linear-gradient(90deg, #7f5c00, #a67c00); }
-  .escala-relleno.rojo { background: linear-gradient(90deg, #6a1b1b, #9d2929); }
+  .escala-relleno { height: 100%; border-radius: 0; background: var(--texto-suave); }
   .escala-tick {
     position: absolute; top: -4px; width: 2px; height: 22px;
     background: var(--texto-tenue); transform: translateX(-1px);
@@ -296,6 +297,20 @@
   }
   .escala-leyenda b { color: var(--texto); }
   .escala-frase { font-size: 13px; color: var(--texto); margin: 10px 2px 18px 2px; }
+
+  /* La misma escala, pero dentro del cuadro de color del detalle de liga. Ahi el
+     fondo ya es verde/amarillo/rojo, asi que los colores del tema no se leen: todo
+     pasa a blanco con transparencias. El relleno va blanco solido porque el
+     degradado original es del mismo color que el cuadro y quedaria invisible. */
+  .card-extremos { text-align: left; }
+  .card-extremos .extremo-pregunta { color: rgba(255,255,255,0.8); margin: 0 0 12px 0; }
+  .card-extremos .escala { margin: 0 0 10px 0; }
+  .card-extremos .escala-track { background: rgba(255,255,255,0.22); }
+  .card-extremos .escala-relleno { background: rgba(255,255,255,0.92); }
+  .card-extremos .escala-tick { background: rgba(255,255,255,0.75); }
+  .card-extremos .escala-leyenda { color: rgba(255,255,255,0.75); margin: 0 0 6px 0; }
+  .card-extremos .escala-leyenda b { color: #fff; }
+  .card-extremos .escala-frase { color: rgba(255,255,255,0.92); margin: 10px 0 0 0; }
 
   .extremo-temp {
     background: var(--superficie); border: 1px solid var(--borde);
@@ -383,18 +398,18 @@
 <div class="page active" id="pageLista">
   <div class="section-heading">Detalle de las ligas</div>
   <input type="text" class="buscador" id="buscadorLigas" placeholder="Buscar liga o país...">
-  <div class="orden-nota">Las que están en alerta van arriba · dentro de cada continente, mayor % en serie primero</div>
+  <div class="orden-nota">En alerta: el que juega antes va arriba · dentro de cada continente, mayor % en serie primero</div>
   <div id="listaResumen"><div class="loading">Cargando datos...</div></div>
 </div>
 
 <div class="page" id="pageDetalleLiga">
-  <button class="volver-btn" onclick="volverALista()">← Volver</button>
   <div class="detalle-liga-header">
     <div class="detalle-liga-bandera" id="detalleBandera"></div>
-    <div>
+    <div class="detalle-liga-titulo">
       <div class="detalle-liga-nombre" id="detalleNombre"></div>
       <div class="detalle-liga-pais" id="detallePais"></div>
     </div>
+    <button class="volver-btn" onclick="volverALista()">← Volver</button>
   </div>
 
   <div id="detalleRachaCard"></div>
@@ -844,6 +859,19 @@ function filaLigaHTML(liga, conCuenta) {
   `;
 }
 
+// Orden del bloque "En alerta", y solo de ese bloque: manda cual juega antes.
+// Es la unica lista donde lo que se mira es "a que le presto atencion ahora", y
+// una racha viva que juega en 2 horas pesa mas que una que juega el sabado. El
+// % en serie desempata. Las que no tienen partido programado van al final.
+// Dentro de los continentes se mantiene el orden por % en serie.
+function porProximoPartido(a, b) {
+  const pa = proximoPartidoDe(a.id), pb = proximoPartidoDe(b.id);
+  if (pa && pb && pa.t !== pb.t) return pa.t - pb.t;
+  if (pa && !pb) return -1;
+  if (!pa && pb) return 1;
+  return b.pctSecuenciales - a.pctSecuenciales || a.pais.localeCompare(b.pais);
+}
+
 function renderLista(listaLigas, plano) {
   const contenedor = document.getElementById("listaResumen");
   if (listaLigas.length === 0) {
@@ -857,7 +885,7 @@ function renderLista(listaLigas, plano) {
     return;
   }
 
-  const enAlerta = listaLigas.filter(l => l.rango === 0);
+  const enAlerta = listaLigas.filter(l => l.rango === 0).sort(porProximoPartido);
 
   let html = "";
   if (enAlerta.length) {
@@ -930,17 +958,22 @@ function mostrarDetalleLiga(ligaId) {
   // --- Card de racha vigente ---
   const racha = infoRacha ? parseInt(infoRacha.racha_actual || "0") : 0;
   const umbral = infoRacha ? parseInt(infoRacha.umbral_alerta || "5") : 5;
-  const ultimaActualizacion = infoRacha ? infoRacha.ultima_actualizacion : "";
   const colorCard = racha >= umbral ? "card-red" : racha >= Math.ceil(umbral / 2) ? "card-yellow" : "card-green";
 
-  document.getElementById("detalleRachaCard").innerHTML = infoRacha ? `
-    <div class="card ${colorCard}">
-      <div class="racha-numero">${racha}</div>
-      <div class="racha-label">partidos consecutivos sin empate (umbral: ${umbral})</div>
-      <div class="racha-label" style="margin-top:6px; font-weight:600;">${etiquetaPorRacha(racha, umbral)}</div>
-      ${ultimaActualizacion ? `<div class="racha-fecha">Actualizado: ${ultimaActualizacion}</div>` : ""}
-    </div>
-  ` : `<div class="card card-gray"><div class="racha-label" style="font-size:15px;">Sin datos de racha todavía</div></div>`;
+  // El cuadro muestra la rareza de la racha. Si la liga todavia no tiene fila en
+  // 'Analisis 2' (recien agregada, la pestana se regenera una vez por dia) se cae
+  // al cuadro viejo con el numero grande, que solo necesita 'Racha_Actual'.
+  const infoExtremos = datosExtremos.find(r => r.liga_id === ligaId);
+  const cardHTML = !infoRacha
+    ? '<div class="card card-gray"><div class="racha-label" style="font-size:15px;">Sin datos de racha todavía</div></div>'
+    : infoExtremos
+      ? `<div class="card card-extremos ${colorCard}">${htmlRarezaRacha(infoExtremos, racha, umbral)}</div>`
+      : `<div class="card ${colorCard}">
+           <div class="racha-numero">${racha}</div>
+           <div class="racha-label">partidos consecutivos sin empate (umbral: ${umbral})</div>
+           <div class="racha-label" style="margin-top:6px; font-weight:600;">${etiquetaPorRacha(racha, umbral)}</div>
+         </div>`;
+  document.getElementById("detalleRachaCard").innerHTML = cardHTML;
 
   // --- Sub-pestaña Analisis ---
   if (infoAnalisis) {
@@ -1033,22 +1066,16 @@ function renderProximos(ligaId) {
   contenedor.innerHTML = html;
 }
 
-function renderExtremos(ligaId, rachaActual, umbral) {
-  const contenedor = document.getElementById("subpageExtremos");
-  const info = datosExtremos.find(r => r.liga_id === ligaId);
-  if (!info) {
-    contenedor.innerHTML = '<div class="empty">Sin datos de extremos para esta liga</div>';
-    return;
-  }
-
+// "Que tan rara es esta racha" ya no vive en la sub-pestana Extremos sino en el
+// cuadro de color del detalle. Se devuelve como HTML en vez de escribirse a un
+// contenedor para que mostrarDetalleLiga lo meta adentro del card.
+function htmlRarezaRacha(info, rachaActual, umbral) {
   const doble = parseInt(info.doble_umbral || "0") || umbral * 2;
   const record = parseInt(info.racha_maxima || "0") || 0;
 
   // Un 8% de aire para que el punto final no quede pegado al borde.
   const tope = Math.max(record, doble, rachaActual, 1) * 1.08;
   const pos = v => Math.max(0, Math.min(100, (v / tope) * 100));
-  const color = rachaActual >= umbral ? "rojo"
-    : rachaActual >= Math.ceil(umbral / 2) ? "amarillo" : "verde";
 
   let frase;
   if (rachaActual === 0) frase = "Sin racha activa: el último partido fue empate.";
@@ -1057,10 +1084,10 @@ function renderExtremos(ligaId, rachaActual, umbral) {
   else if (rachaActual >= umbral) frase = `Cruzó el umbral, todavía no el doble (${doble}).`;
   else frase = `Por debajo del umbral (${umbral}).`;
 
-  let html = `
+  return `
     <div class="extremo-pregunta">¿Qué tan rara es esta racha?</div>
     <div class="escala">
-      <div class="escala-track"><div class="escala-relleno ${color}" style="width:${pos(rachaActual)}%"></div></div>
+      <div class="escala-track"><div class="escala-relleno" style="width:${pos(rachaActual)}%"></div></div>
       <div class="escala-tick" style="left:${pos(umbral)}%"></div>
       <div class="escala-tick" style="left:${pos(doble)}%"></div>
     </div>
@@ -1072,9 +1099,20 @@ function renderExtremos(ligaId, rachaActual, umbral) {
     </div>
     <div class="escala-frase">${frase}</div>
   `;
+}
 
+// La sub-pestana queda solo con las rachas por temporada.
+function renderExtremos(ligaId, rachaActual, umbral) {
+  const contenedor = document.getElementById("subpageExtremos");
+  const info = datosExtremos.find(r => r.liga_id === ligaId);
+  if (!info) {
+    contenedor.innerHTML = '<div class="empty">Sin datos de extremos para esta liga</div>';
+    return;
+  }
+
+  const doble = parseInt(info.doble_umbral || "0") || umbral * 2;
   const anios = Object.keys(info).filter(k => /^\d{4}$/.test(k)).sort().reverse();
-  html += `<div class="section-title">Rachas de ${doble} o más, por temporada</div>`;
+  let html = `<div class="section-title">Rachas de ${doble} o más, por temporada</div>`;
 
   anios.forEach(anio => {
     const d = parseCeldaExtremo(info[anio]);
