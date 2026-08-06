@@ -1090,8 +1090,10 @@ function htmlRarezaRacha(info, rachaActual, umbral) {
   const doble = parseInt(info.doble_umbral || "0") || umbral * 2;
   const record = parseInt(info.racha_maxima || "0") || 0;
 
-  // Un 8% de aire para que el punto final no quede pegado al borde.
-  const tope = Math.max(record, doble, rachaActual, 1) * 1.08;
+  // Apenas un 2% de aire al final: alcanza para que el tick del valor mas alto
+  // (casi siempre el record) no quede cortado contra el borde, y deja que la
+  // escala use todo el ancho en vez de terminar antes de tiempo.
+  const tope = Math.max(record, doble, rachaActual, 1) * 1.02;
   const pos = v => Math.max(0, Math.min(100, (v / tope) * 100));
 
   // Cerca de los bordes la etiqueta se apoya contra el borde en vez de centrarse

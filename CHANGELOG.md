@@ -9,6 +9,7 @@ Rediseño de la escala del cuadro de detalle. Antes los cuatro valores iban en u
 - Textos de 11 a **12px** y números de 11 a **17px en negrita**
 - **"¿Qué tan rara es esta racha?" y la frase quedan centradas**
 - Las referencias que caen demasiado cerca se fusionan en una sola etiqueta (`Doble/Récord 12`), que es lo que pasa cuando el récord de una liga coincide con el doble de su umbral. Y contra los bordes la etiqueta se apoya en el borde en vez de centrarse, si no quedaba cortada cuando la racha está en 0 o en su máximo
+- El valor mas alto de la escala (casi siempre el récord) queda al 98% del ancho y no al 92%: el aire sobrante al final pasa de 8% a 2%, lo justo para que su tick no se corte contra el borde. Las marcas intermedias se reparten mejor a lo largo de toda la barra
 - Los ticks de referencia pasan a oscuros: sobre el tramo ya relleno de blanco, un tick blanco desaparecía
 
 ## v5.1.0 - 2026-08-06
