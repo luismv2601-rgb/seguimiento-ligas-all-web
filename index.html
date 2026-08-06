@@ -971,18 +971,40 @@ function mostrarDetalleLiga(ligaId) {
   cambiarSubpagina("extremos");
 }
 
-function textoCuando(dias) {
-  const n = parseInt(dias);
+// La columna 'dias_para' del Sheet queda congelada en la corrida que genero la
+// pestana, asi que al dia siguiente su "hoy" en realidad es ayer. Se recalcula
+// aca contra el dia actual en hora Peru, que es la zona en la que el Sheet
+// guarda las fechas.
+function diasPara(fecha) {
+  const f = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(fecha || "").trim());
+  if (!f) return NaN;
+  const dia = Date.UTC(+f[1], +f[2] - 1, +f[3]);
+  const enPeru = new Date(Date.now() - 5 * 3600 * 1000);
+  const hoy = Date.UTC(enPeru.getUTCFullYear(), enPeru.getUTCMonth(), enPeru.getUTCDate());
+  return Math.round((dia - hoy) / 86400000);
+}
+
+function textoCuando(fecha) {
+  const n = diasPara(fecha);
   if (isNaN(n)) return "";
-  if (n === 0) return "hoy";
+  if (n <= 0) return "hoy";
   if (n === 1) return "mañana";
   return `en ${n} días`;
 }
 
 function renderProximos(ligaId) {
   const contenedor = document.getElementById("subpageProximos");
+  // Se descartan los que ya empezaron. La pestana del Sheet se regenera dos veces
+  // por dia, asi que sin este filtro un partido de las 14:00 se seguia mostrando
+  // como proximo a las 23:00. Mismo criterio que proximoPartidoDe(), para que el
+  // semaforo y esta lista no se contradigan.
+  const ahora = Date.now();
   const partidos = datosProximos
-    .filter(p => p.liga_id === ligaId && p.fecha)
+    .filter(p => {
+      if (p.liga_id !== ligaId || !p.fecha) return false;
+      const t = instanteDePartido(p.fecha, p.hora_peru);
+      return t !== null && t >= ahora;
+    })
     .sort((a, b) => (a.fecha + a.hora_peru).localeCompare(b.fecha + b.hora_peru));
 
   if (partidos.length === 0) {
@@ -994,7 +1016,7 @@ function renderProximos(ligaId) {
   let fechaPrevia = null;
   partidos.forEach(p => {
     if (p.fecha !== fechaPrevia) {
-      html += `<div class="prox-dia">${p.fecha} <span class="prox-cuando">${textoCuando(p.dias_para)}</span></div>`;
+      html += `<div class="prox-dia">${p.fecha} <span class="prox-cuando">${textoCuando(p.fecha)}</span></div>`;
       fechaPrevia = p.fecha;
     }
     html += `
