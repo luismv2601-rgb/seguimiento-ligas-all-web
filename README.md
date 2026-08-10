@@ -97,11 +97,34 @@ El segundo criterio no es cosmético. En una liga secuencial la racha es un dato
 - El orden de los continentes está en `ORDEN_CONTINENTES`, con América primero. Lo que no figure ahí se agrega al final por orden alfabético.
 - El `onclick` recibe el **id normalizado** (`Sudamerica`), no el nombre. Pasar `"Sudamérica"` por el atributo obliga a comillas dentro de comillas y rompe el HTML — fue un bug real. El nombre viaja en `data-region`.
 
+### El umbral de la app: μ+2σ, y no el del Sheet
+
+**Desde el 2026-08-10 la app no usa `umbral_alerta` para decidir qué está en alerta.** Calcula **μ+2σ** por su cuenta, a partir de `promedio_racha` y `desviacion_std` de la hoja `Analisis` — que *es* el baseline 2024-2025.
+
+Es una **prueba**: con la regla de producción (μ+1σ) saltaban ~43 alertas por mes y no se podía actuar. Con μ+2σ las ligas en alerta bajaron de 8 a 4.
+
+> **Ojo:** el Sheet no se tocó. `umbral_alerta` sigue en μ+1σ y **Google Calendar sigue avisando con el criterio viejo**. O sea que la app y el Calendar no coinciden a propósito. Volver atrás es revertir el `index.html`.
+
+El cuadro de color muestra cuatro referencias arriba de la escala:
+
+| Marca | Qué es |
+|---|---|
+| **μ** | Promedio de racha de la liga. Va con un decimal: redondeado se confundiría con el umbral en las ligas de promedio alto |
+| **μ+2σ** | El umbral de la prueba, el que pinta la alerta |
+| **T5%** | Donde arranca el 5% de rachas más largas de esa liga |
+| **R** | Récord histórico |
+
+**μ+2σ y T5% caen casi siempre pegados** (difieren en 1 o menos en 38 de las 57 ligas), así que la etiqueta fusionada `μ+2σ/T5% 9` es el caso normal.
+
+**T5%** sale de `u = ln(0,05) / ln(1−p)`, con p la tasa de empates de la liga. Las rachas son geométricas — "cuántos partidos hasta el próximo empate" —, así que promedio y desviación se derivan de p y no aportan información nueva; por eso el cuantil no los usa.
+
+> **Trampa de redondeo:** `analisis_extremos.py` calcula el mismo μ+2σ del lado del backend para la pestaña Extremos. Usa `floor(x+0,5)` y **no** el `round()` de Python, que es bancario (`round(6,5)` da 6) y discreparía con el `Math.round()` de JavaScript. Si se toca uno de los dos, hay que tocar el otro.
+
 ### Detalle por liga (al hacer clic en una fila)
 
 Se abre una vista propia con una card de racha vigente arriba, y 4 sub-pestañas en este orden. **Abre en Extremos**, que es lo que más se consulta:
 
-- **Extremos** — lee la hoja `Analisis 2`. Arriba, una escala que ubica la racha de hoy contra el umbral, el doble y el récord histórico, con una frase que interpreta dónde cayó. Abajo, un bloque por temporada con cuántas rachas llegaron al doble del umbral, qué porcentaje representan sobre los empates de esa temporada y los largos concretos como chips, con el mayor resaltado.
+- **Extremos** — lee la hoja `Analisis 2`. Un bloque por temporada con cuántas rachas llegaron a **μ+2σ**, qué porcentaje representan sobre los empates de esa temporada y los largos concretos como chips, con el mayor resaltado. La escala que ubica la racha de hoy vive arriba, en el cuadro de color (ver "El umbral de la app").
 - **Partidos** — todos los partidos de la **temporada actual** de esa liga. La temporada no se deduce de la fecha del último partido, porque en las ligas europeas la temporada 2026 se juega entre agosto de 2026 y mayo de 2027; se pregunta al Sheet con `select max(E)`.
 - **Próximos** — lee la hoja `Proximos`: los partidos con hora confirmada de los próximos 14 días, agrupados por día y con la distancia en lenguaje natural (hoy, mañana, en 3 días).
 - **Análisis** — ficha con los campos de la pestaña `Analisis` del Sheet (excepto `liga_id`).
@@ -138,7 +161,7 @@ Son dos consultas por liga: la temporada más reciente (~20 bytes) y sus partido
 
 **Ojo con los decimales:** la hoja usa configuración regional española (coma decimal, ej. `47,5`), y Google Sheets envuelve esos valores entre comillas en el CSV para no romper el formato (`"47,5"`). El parser de `index.html` (`parseCSVLinea`) respeta esas comillas, y `numeroDecimalComaOPunto()` convierte coma a punto antes de cualquier comparación numérica. Si se toca el parser, hay que mantener ambas cosas.
 
-**Ojo con `Analisis 2`:** arranca con dos filas de título antes de los encabezados (de ahí `parseCSVDesde`), y sus celdas de temporada son texto legible del estilo `6 de 81 (7,4%) -> 20, 13, 12`. La página las parsea con `RE_CELDA_EXTREMO`. Ese formato lo genera `analisis_extremos.py` en el proyecto de datos: si cambia allá, hay que cambiar la expresión acá.
+**Ojo con `Analisis 2`:** arranca con dos filas de título antes de los encabezados (de ahí `parseCSVDesde`), y sus celdas de temporada son texto legible del estilo `6 de 81 (7,4%) -> 20, 13, 12`. La página las parsea con `RE_CELDA_EXTREMO`. Ese formato lo genera `analisis_extremos.py` en el proyecto de datos: si cambia allá, hay que cambiar la expresión acá. Desde el 2026-08-10 la columna del corte se llama **`umbral_mu2s`** (antes `doble_umbral`) y las celdas cuentan rachas ≥ μ+2σ; el formato del texto no cambió, solo su significado.
 
 **Ojo con `Proximos`:** trae una fila de título antes de los encabezados (`parseCSVDesde(texto, 1)`).
 

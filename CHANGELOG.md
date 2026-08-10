@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.5.0 - 2026-08-10
+
+**Prueba de umbral más exigente.** Con la regla de producción (promedio + 1 desviación) saltaban ~43 alertas por mes y no se podía actuar sobre ellas. La app pasa a pintar alertas con **μ+2σ**, a modo de prueba.
+
+- **El Sheet no se toca.** `umbral_alerta` sigue siendo μ+1σ y **Google Calendar sigue avisando con el criterio viejo**. La app calcula μ+2σ por su cuenta desde `Analisis`, que ya publica `promedio_racha` y `desviacion_std`. Volver atrás es revertir este archivo
+- Con el histórico de hoy, las ligas en alerta bajan de **8 a 4**: siguen Albania, Bulgaria, Suecia y Venezuela; salen Argentina, Dinamarca, Malta y Nicaragua
+- **El cuadro de color muestra cuatro referencias** arriba de la escala: **μ**, **μ+2σ**, **T5%** y **R** (récord). Antes eran Umbral, Doble y Récord
+- **μ+2σ y T5% caen casi siempre pegados** —difieren en 1 o menos en 38 de las 57 ligas—, así que la etiqueta fusionada `μ+2σ/T5% 9` es lo normal, no un error de la escala
+- μ va con un decimal (`2,1`) y no redondeado: es el promedio crudo de la liga y redondearlo lo confundiría con el umbral en las ligas de promedio alto
+- **T5%** es el umbral a partir del cual solo queda el 5% más largo de las rachas de esa liga. Sale de `u = ln(0,05) / ln(1−p)`, con p la tasa de empates: las rachas son geométricas, así que promedio y desviación se derivan de p y no aportan información nueva
+- La sub-pestaña **Extremos** pasa a contar rachas **≥ μ+2σ** por temporada, en vez de ≥ el doble del umbral. El corte lo publica el backend en la columna `umbral_mu2s` de `Analisis 2`, que reemplaza a `doble_umbral`
+- Los dos lados redondean igual a propósito: el backend usa `floor(x+0,5)` y no el `round()` de Python, que es bancario (`round(6,5)` da 6) y habría discrepado con el `Math.round()` de JavaScript. Verificado liga por liga: los 57 umbrales coinciden
+
 ## v5.4.0 - 2026-08-09
 
 La pantalla principal pasa a tener tres pestañas, y aparece una lista de seguimiento propia.

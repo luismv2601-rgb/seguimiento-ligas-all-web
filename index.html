@@ -285,7 +285,7 @@
   /* --- Escala "qué tan rara es esta racha" --- */
   .extremo-pregunta { font-size: 14px; color: var(--texto-suave); margin: 16px 2px 14px 2px; text-align: center; }
 
-  /* Tres bandas apiladas: las referencias fijas (umbral, doble, récord) arriba de
+  /* Tres bandas apiladas: las referencias fijas (μ, μ+2σ, T5%, récord) arriba de
      la barra, la barra en el medio, y la racha de ahora abajo. Cada etiqueta se
      posiciona con left:% sobre el mismo eje que usa la barra, asi cae justo encima
      del valor que nombra. */
@@ -703,6 +703,40 @@ function parseCSVDesde(texto, filasAOmitir) {
 // Las celdas de temporada de "Analisis 2" vienen como texto legible, del estilo
 // "6 de 81 (7,4%) -> 20, 13, 12". El formato lo genera analisis_extremos.py: si
 // cambia alla, hay que cambiar esta expresion.
+// --- Umbrales de la prueba (2026-08-10) ---
+// La regla de produccion sigue siendo `umbral_alerta` de la hoja, promedio + 1
+// desviacion, y es la que dispara los eventos de Google Calendar. **La app no la
+// usa mas para pintar alertas**: prueba con mu+2s, que es mas exigente, porque
+// con mu+1s saltaban ~43 alertas por mes y no se podia actuar sobre ellas.
+//
+// Se calcula aca y no se lee del Sheet a proposito: asi la prueba no toca ningun
+// dato y volver atras es revertir este archivo.
+//
+// Todo sale de la hoja Analisis, que **es** el baseline 2024-2025: promedio_racha,
+// desviacion_std, total_partidos y total_empates. No se recalcula nada.
+function umbralMu2s(analisis) {
+  if (!analisis) return null;
+  const mu = numeroDecimalComaOPunto(analisis.promedio_racha);
+  const s = numeroDecimalComaOPunto(analisis.desviacion_std);
+  if (isNaN(mu) || isNaN(s)) return null;
+  return Math.max(Math.round(mu + 2 * s), 1);
+}
+
+// Umbral a partir del cual solo queda el 5% mas raro de las rachas de esa liga.
+// Las rachas son geometricas — "cuantos partidos hasta el proximo empate" —, asi
+// que P(racha >= u) = (1-p)^u y el umbral se despeja: u = ln(0,05) / ln(1-p).
+// No usa promedio ni desviacion: en una geometrica los dos se derivan de p, o sea
+// que no aportan informacion nueva.
+function umbralTop5(analisis) {
+  if (!analisis) return null;
+  const partidos = numeroDecimalComaOPunto(analisis.total_partidos);
+  const empates = numeroDecimalComaOPunto(analisis.total_empates);
+  if (!partidos || isNaN(empates)) return null;
+  const p = empates / partidos;
+  if (!(p > 0 && p < 1)) return null;
+  return Math.max(Math.ceil(Math.log(0.05) / Math.log(1 - p)), 1);
+}
+
 const RE_CELDA_EXTREMO = /^(\d+)\s+de\s+(\d+)\s+\(([\d.,]+)%\)(?:\s*->\s*(.*))?$/;
 
 function parseCeldaExtremo(texto) {
@@ -752,8 +786,10 @@ async function cargarTodo() {
     ligas = datosRacha
       .map(r => {
         const racha = parseInt(r.racha_actual || "0");
-        const umbral = parseInt(r.umbral_alerta || "5") || 5;
         const analisis = datosAnalisis.find(a => a.liga_id === r.liga_id);
+        // Prueba con mu+2s. Si la liga todavia no tiene fila en Analisis se cae al
+        // umbral de produccion, que siempre esta en Racha_Actual.
+        const umbral = umbralMu2s(analisis) || parseInt(r.umbral_alerta || "5") || 5;
         const pctTexto = analisis ? analisis.pct_secuenciales : "";
         const pct = numeroDecimalComaOPunto(pctTexto);
         return {
@@ -913,7 +949,7 @@ setInterval(refrescarCuentas, 60000);
 function filaLigaHTML(liga, conCuenta, conCheck) {
   const info = datosRacha.find(r => r.liga_id === liga.id);
   const racha = info ? parseInt(info.racha_actual || "0") : null;
-  const umbral = info ? parseInt(info.umbral_alerta || "5") : 5;
+  const umbral = liga.umbral; // mu+2s de la prueba, ya resuelto al armar la lista
   const rachaMaxima = info ? info.racha_maxima : "-";
   const color = colorSemaforo(racha, umbral);
   const marcada = conCheck && leerSeleccionadas().has(liga.id);
@@ -1049,7 +1085,7 @@ function mostrarDetalleLiga(ligaId) {
 
   // --- Card de racha vigente ---
   const racha = infoRacha ? parseInt(infoRacha.racha_actual || "0") : 0;
-  const umbral = infoRacha ? parseInt(infoRacha.umbral_alerta || "5") : 5;
+  const umbral = umbralMu2s(infoAnalisis) || (infoRacha ? parseInt(infoRacha.umbral_alerta || "5") : 5);
   const colorCard = racha >= umbral ? "card-red" : racha >= Math.ceil(umbral / 2) ? "card-yellow" : "card-green";
 
   // El cuadro muestra la rareza de la racha. Si la liga todavia no tiene fila en
@@ -1059,7 +1095,7 @@ function mostrarDetalleLiga(ligaId) {
   const cardHTML = !infoRacha
     ? '<div class="card card-gray"><div class="racha-label" style="font-size:15px;">Sin datos de racha todavía</div></div>'
     : infoExtremos
-      ? `<div class="card card-extremos ${colorCard}">${htmlRarezaRacha(infoExtremos, racha, umbral)}</div>`
+      ? `<div class="card card-extremos ${colorCard}">${htmlRarezaRacha(infoExtremos, infoAnalisis, racha, umbral)}</div>`
       : `<div class="card ${colorCard}">
            <div class="racha-numero">${racha}</div>
            <div class="racha-label">partidos consecutivos sin empate (umbral: ${umbral})</div>
@@ -1161,14 +1197,18 @@ function renderProximos(ligaId) {
 // "Que tan rara es esta racha" ya no vive en la sub-pestana Extremos sino en el
 // cuadro de color del detalle. Se devuelve como HTML en vez de escribirse a un
 // contenedor para que mostrarDetalleLiga lo meta adentro del card.
-function htmlRarezaRacha(info, rachaActual, umbral) {
-  const doble = parseInt(info.doble_umbral || "0") || umbral * 2;
+function htmlRarezaRacha(info, analisis, rachaActual, umbral) {
   const record = parseInt(info.racha_maxima || "0") || 0;
+  // mu es el unico decimal de la escala: es el promedio crudo de la liga, y
+  // redondearlo a entero lo confundiria con el umbral en las ligas de promedio
+  // alto. Se muestra con un decimal y se posiciona con su valor real.
+  const mu = analisis ? numeroDecimalComaOPunto(analisis.promedio_racha) : NaN;
+  const top5 = umbralTop5(analisis);
 
   // Apenas un 2% de aire al final: alcanza para que el tick del valor mas alto
   // (casi siempre el record) no quede cortado contra el borde, y deja que la
   // escala use todo el ancho en vez de terminar antes de tiempo.
-  const tope = Math.max(record, doble, rachaActual, 1) * 1.02;
+  const tope = Math.max(record, umbral, top5 || 0, rachaActual, 1) * 1.02;
   const pos = v => Math.max(0, Math.min(100, (v / tope) * 100));
 
   // Cerca de los bordes la etiqueta se apoya contra el borde en vez de centrarse
@@ -1179,10 +1219,15 @@ function htmlRarezaRacha(info, rachaActual, umbral) {
       ? `right:${100 - p}%; align-items:flex-end;`
       : `left:${p}%; transform:translateX(-50%); align-items:center;`;
 
-  // Referencias fijas de la liga. Se agrupan las que caen tan cerca que se
-  // pisarian (pasa cuando el récord es igual al doble, o casi).
-  const refs = [{ t: "Umbral", v: umbral }, { t: "Doble", v: doble }];
-  if (record) refs.push({ t: "Récord", v: record });
+  // Referencias fijas de la liga: promedio, el umbral de la prueba, el corte del
+  // 5% mas raro y el record. Se agrupan las que caen tan cerca que se pisarian —
+  // mu+2s y T5% difieren en 1 o menos en 38 de las 57 ligas, asi que la etiqueta
+  // fusionada `mu+2s/T5% 9` es el caso normal, no la excepcion.
+  const refs = [];
+  if (!isNaN(mu)) refs.push({ t: "μ", v: mu, txt: mu.toFixed(1).replace(".", ",") });
+  refs.push({ t: "μ+2σ", v: umbral });
+  if (top5) refs.push({ t: "T5%", v: top5 });
+  if (record) refs.push({ t: "R", v: record });
   refs.sort((a, b) => a.v - b.v);
 
   const grupos = [];
@@ -1194,7 +1239,7 @@ function htmlRarezaRacha(info, rachaActual, umbral) {
 
   const marcasArriba = grupos.map(g => {
     const p = pos(g[g.length - 1].v);
-    const numeros = [...new Set(g.map(m => m.v))].join("/");
+    const numeros = [...new Set(g.map(m => m.txt || String(m.v)))].join("/");
     return `<div class="marca" style="${ubicar(p)}">
         <span class="marca-txt">${g.map(m => m.t).join("/")}</span>
         <span class="marca-num">${numeros}</span>
@@ -1207,9 +1252,9 @@ function htmlRarezaRacha(info, rachaActual, umbral) {
   let frase;
   if (rachaActual === 0) frase = "Sin racha activa: el último partido fue empate.";
   else if (record && rachaActual >= record) frase = `Está en su máximo histórico (${record}).`;
-  else if (rachaActual >= doble) frase = `Ya superó el doble del umbral (${doble}).`;
-  else if (rachaActual >= umbral) frase = `Cruzó el umbral, todavía no el doble (${doble}).`;
-  else frase = `Por debajo del umbral (${umbral}).`;
+  else if (top5 && rachaActual >= top5) frase = `Está en el 5% de rachas más largas de la liga (desde ${top5}).`;
+  else if (rachaActual >= umbral) frase = `Cruzó μ+2σ (${umbral}), todavía no el 5% más raro${top5 ? ` (${top5})` : ""}.`;
+  else frase = `Por debajo de μ+2σ (${umbral}).`;
 
   return `
     <div class="extremo-pregunta">¿Qué tan rara es esta racha?</div>
@@ -1240,9 +1285,11 @@ function renderExtremos(ligaId, rachaActual, umbral) {
     return;
   }
 
-  const doble = parseInt(info.doble_umbral || "0") || umbral * 2;
+  // El corte lo publica analisis_extremos.py en 'umbral_mu2s'; el calculo local es
+  // el respaldo si la pestana todavia no se regenero con la columna nueva.
+  const corte = parseInt(info.umbral_mu2s || "0") || umbral;
   const anios = Object.keys(info).filter(k => /^\d{4}$/.test(k)).sort().reverse();
-  let html = `<div class="section-title">Rachas de ${doble} o más, por temporada</div>`;
+  let html = `<div class="section-title">Rachas de ${corte} o más (μ+2σ), por temporada</div>`;
 
   anios.forEach(anio => {
     const d = parseCeldaExtremo(info[anio]);
@@ -1251,7 +1298,7 @@ function renderExtremos(ligaId, rachaActual, umbral) {
     const chips = d.valores.length
       ? `<div class="extremo-chips">${d.valores
           .map(v => `<span class="chip ${v === maximo ? "chip-max" : ""}">${v}</span>`).join("")}</div>`
-      : '<div class="extremo-vacio">Ninguna llegó al doble esta temporada</div>';
+      : '<div class="extremo-vacio">Ninguna llegó a μ+2σ esta temporada</div>';
 
     html += `
       <div class="extremo-temp">
