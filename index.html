@@ -482,7 +482,6 @@ const PAISES = {
   "Bulgaria": ["BG", "#00966e"], "Irlanda": ["IE", "#169b62"], "Islandia": ["IS", "#02529c"],
   "Finlandia": ["FI", "#002f6c"], "Chipre": ["CY", "#d57800"],
   "Eslovenia": ["SI", "#005da4"], "Macedonia": ["MK", "#d20000"],
-  "Montenegro": ["ME", "#c40308"], "Luxemburgo": ["LU", "#00a1de"],
   "Gales": ["WA", "#00ab39"], "Bosnia": ["BA", "#002395"], "Albania": ["AL", "#e41e20"],
   "Georgia": ["GE", "#d0021b"], "Azerbaiyán": ["AZ", "#00b5e2"],
   "Kazajistán": ["KZ", "#00afca"], "Moldavia": ["MD", "#0046ae"], "Malta": ["MT", "#cf142b"],
@@ -494,8 +493,8 @@ const PAISES = {
   "Bolivia": ["BO", "#007934"], "Canadá": ["CA", "#d80621"], "Panamá": ["PA", "#005293"],
   "Guatemala": ["GT", "#4997d0"], "El Salvador": ["SV", "#0f47af"],
   "Honduras": ["HN", "#0073cf"], "Nicaragua": ["NI", "#0067c6"],
-  "Estados Unidos": ["US", "#3c3b6e"], "Arabia Saudita": ["SA", "#006c35"],
-  "Japón": ["JP", "#bc002d"], "Australia": ["AU", "#00247d"],
+  "Arabia Saudita": ["SA", "#006c35"], "Japón": ["JP", "#bc002d"],
+  "Australia": ["AU", "#00247d"],
 };
 
 // Sobre amarillos y celestes el texto blanco no se lee: se elige segun luminancia.
@@ -557,13 +556,9 @@ const BANDERAS = {
   "Kazajistán": `<rect width="3" height="2" fill="#00afca"/><rect x=".14" y=".3" width=".13" height="1.4" fill="#fec50c"/><circle cx="1.65" cy=".95" r=".3" fill="#fec50c"/><path d="M1.65 .95L1.65 .38M1.65 .95L1.65 1.52M1.65 .95L1.08 .95M1.65 .95L2.22 .95M1.65 .95L1.25 .55M1.65 .95L2.05 1.35M1.65 .95L1.25 1.35M1.65 .95L2.05 .55" stroke="#fec50c" stroke-width=".09"/>`,
   "Bulgaria": h3("#fff", "#00966e", "#d62612"),
   "Macedonia": `<rect width="3" height="2" fill="#d20000"/><circle cx="1.5" cy="1" r=".42" fill="#f8e71c"/><path d="M1.5 1L0 0M1.5 1L3 0M1.5 1L0 2M1.5 1L3 2M1.5 1L1.5-.2M1.5 1L1.5 2.2M1.5 1L-.2 1M1.5 1L3.2 1" stroke="#f8e71c" stroke-width=".16"/>`,
-  "Montenegro": `<rect width="3" height="2" fill="#c40308"/><rect x=".12" y=".08" width="2.76" height="1.84" fill="none" stroke="#d4af37" stroke-width=".16"/><circle cx="1.5" cy="1" r=".38" fill="#d4af37"/>`,
-  "Luxemburgo": h3("#ea141d", "#fff", "#00a1de"),
   "Gales": `${h2("#fff", "#00ab39")}<path d="M.8 1.1q.3-.5 .8-.3 .4 .15 .8 0 .1 .35-.3 .5-.5 .2-.8 .1-.3-.1-.5-.3z" fill="#c8102e"/>`,
   // --- Europa: las que arrancan en agosto de 2026 ---
-  // Paises Bajos contra Luxemburgo: el mismo rojo-blanco-azul, separados solo por
-  // el tono del azul (marino contra celeste). Croacia tambien lo comparte, pero
-  // lleva escudo.
+  // Paises Bajos comparte el rojo-blanco-azul con Croacia, que lleva escudo.
   "Países Bajos": h3("#ae1c28", "#fff", "#21468b"),
   "Bélgica": v3("#101010", "#fae042", "#ed2939"),
   "Portugal": `<rect width="3" height="2" fill="#da291c"/><rect width="1.2" height="2" fill="#046a38"/><circle cx="1.2" cy="1" r=".32" fill="#ffe900"/><circle cx="1.2" cy="1" r=".15" fill="#046a38"/>`,
@@ -588,7 +583,6 @@ const BANDERAS = {
   // --- Norte y Centroamerica ---
   "México": `${v3("#006847", "#fff", "#ce1126")}<circle cx="1.5" cy="1" r=".26" fill="#8b5a2b"/>`,
   "Costa Rica": `<rect width="3" height="2" fill="#002b7f"/><rect y=".33" width="3" height="1.34" fill="#fff"/><rect y=".67" width="3" height=".66" fill="#ce1126"/>`,
-  "Estados Unidos": `<rect width="3" height="2" fill="#fff"/><rect width="3" height=".28" fill="#b22234"/><rect y=".56" width="3" height=".28" fill="#b22234"/><rect y="1.12" width="3" height=".28" fill="#b22234"/><rect y="1.68" width="3" height=".28" fill="#b22234"/><rect width="1.3" height="1.1" fill="#3c3b6e"/>`,
   "Canadá": `${v3("#d80621", "#fff", "#d80621")}<path d="M1.5 .55l.16 .34 .34-.1-.18 .35 .28 .1-.34 .18 .06 .3-.32-.16-.32 .16 .06-.3-.34-.18 .28-.1-.18-.35 .34 .1z" fill="#d80621"/>`,
   "Panamá": `<rect width="3" height="2" fill="#fff"/><rect x="1.5" width="1.5" height="1" fill="#d21034"/><rect y="1" width="1.5" height="1" fill="#005293"/><path d="M.75 .3l.13 .28 .3-.04-.2 .24 .2 .24-.3-.04-.13 .28-.13-.28-.3 .04 .2-.24-.2-.24 .3 .04z" fill="#005293"/>`,
   "Guatemala": v3("#4997d0", "#fff", "#4997d0"),

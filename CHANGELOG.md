@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.3.1 - 2026-08-09
+
+Salen otras 4 ligas del sistema, las que juegan casi todo en paralelo.
+
+- **Fuera 3 banderas:** Luxemburgo, Montenegro y Estados Unidos. `BANDERAS` queda en **57**
+- **Inglaterra se queda**, aunque salió el Championship: le queda la Premier League. Es la trampa de este cambio — el país sigue teniendo liga activa, así que borrar su bandera la habría dejado con una pastilla gris
+- Con Luxemburgo afuera, la nota sobre el rojo-blanco-azul pierde una: Países Bajos ya solo se compara contra Croacia, que lleva escudo
+- Ningún grupo desaparece: Norte y Centroamérica baja a 8 ligas pero sigue
+
 ## v5.3.0 - 2026-08-09
 
 Se retiran 4 ligas del sistema y con ellas el continente asiático.
