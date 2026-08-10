@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.3.0 - 2026-08-09
+
+Se retiran 4 ligas del sistema y con ellas el continente asiático.
+
+- **Fuera el grupo `Asia`.** China y Corea del Sur eran las dos únicas ligas asiáticas, así que salió de `ORDEN_CONTINENTES`. Quedan tres grupos: Sudamérica, Norte y Centroamérica, Europa
+- **Fuera 4 banderas:** Irlanda del Norte, Kosovo, China y Corea del Sur. `BANDERAS` queda en **60**, una por cada país con liga activa. También salen de `PAISES`, el diccionario de respaldo
+- La nota sobre las cruces rojas sobre blanco pasa de tres banderas a dos: sin Irlanda del Norte quedan Inglaterra, que va limpia, y Georgia con los cuatro cuadrados. El disco central ya no hace falta para distinguirlas
+- Las ligas dejan de aparecer porque se borraron sus filas del Sheet desde el proyecto de datos. Sacarlas de `ligas.json` no alcanzaba: esta página arma la lista desde `Racha_Actual`
+
 ## v5.2.0 - 2026-08-06
 
 Rediseño de la escala del cuadro de detalle. Antes los cuatro valores iban en una fila de texto debajo de la barra, sin relación visual con el punto que nombraban.

@@ -484,10 +484,9 @@ const PAISES = {
   "Eslovenia": ["SI", "#005da4"], "Macedonia": ["MK", "#d20000"],
   "Montenegro": ["ME", "#c40308"], "Luxemburgo": ["LU", "#00a1de"],
   "Gales": ["WA", "#00ab39"], "Bosnia": ["BA", "#002395"], "Albania": ["AL", "#e41e20"],
-  "Kosovo": ["XK", "#244aa5"], "Georgia": ["GE", "#d0021b"], "Azerbaiyán": ["AZ", "#00b5e2"],
+  "Georgia": ["GE", "#d0021b"], "Azerbaiyán": ["AZ", "#00b5e2"],
   "Kazajistán": ["KZ", "#00afca"], "Moldavia": ["MD", "#0046ae"], "Malta": ["MT", "#cf142b"],
-  "Israel": ["IL", "#0038b8"], "Irlanda del Norte": ["NR", "#00843d"],
-  "Islas Feroe": ["FO", "#0065bd"],
+  "Israel": ["IL", "#0038b8"], "Islas Feroe": ["FO", "#0065bd"],
   "Perú": ["PE", "#d91023"], "Brasil": ["BR", "#009c3b"], "Argentina": ["AR", "#74acdf"],
   "México": ["MX", "#006847"], "Colombia": ["CO", "#fcd116"], "Chile": ["CL", "#0039a6"],
   "Ecuador": ["EC", "#ffdd00"], "Uruguay": ["UY", "#0038a8"], "Paraguay": ["PY", "#d52b1e"],
@@ -496,8 +495,7 @@ const PAISES = {
   "Guatemala": ["GT", "#4997d0"], "El Salvador": ["SV", "#0f47af"],
   "Honduras": ["HN", "#0073cf"], "Nicaragua": ["NI", "#0067c6"],
   "Estados Unidos": ["US", "#3c3b6e"], "Arabia Saudita": ["SA", "#006c35"],
-  "Japón": ["JP", "#bc002d"], "Corea del Sur": ["KR", "#003478"],
-  "Australia": ["AU", "#00247d"], "China": ["CN", "#de2910"],
+  "Japón": ["JP", "#bc002d"], "Australia": ["AU", "#00247d"],
 };
 
 // Sobre amarillos y celestes el texto blanco no se lee: se elige segun luminancia.
@@ -570,15 +568,12 @@ const BANDERAS = {
   "Bélgica": v3("#101010", "#fae042", "#ed2939"),
   "Portugal": `<rect width="3" height="2" fill="#da291c"/><rect width="1.2" height="2" fill="#046a38"/><circle cx="1.2" cy="1" r=".32" fill="#ffe900"/><circle cx="1.2" cy="1" r=".15" fill="#046a38"/>`,
   "Bosnia": `<rect width="3" height="2" fill="#002395"/><path d="M.85 .12H2.5V1.88z" fill="#fecb00"/>`,
-  // Tres banderas del set son cruz roja sobre blanco. Se separan con la marca del
-  // centro o de las esquinas: Inglaterra va limpia, Irlanda del Norte lleva el
-  // disco central e [[Georgia]] los cuatro cuadrados.
+  // Dos banderas del set son cruz roja sobre blanco. Se separan con la marca de
+  // las esquinas: Inglaterra va limpia y [[Georgia]] lleva los cuatro cuadrados.
   "Inglaterra": `<rect width="3" height="2" fill="#fff"/><rect x="1.26" width=".48" height="2" fill="#ce1124"/><rect y=".76" width="3" height=".48" fill="#ce1124"/>`,
-  "Irlanda del Norte": `<rect width="3" height="2" fill="#fff"/><rect x="1.3" width=".4" height="2" fill="#c8102e"/><rect y=".8" width="3" height=".4" fill="#c8102e"/><circle cx="1.5" cy="1" r=".42" fill="#fff" stroke="#c8102e" stroke-width=".08"/><circle cx="1.5" cy="1" r=".17" fill="#c8102e"/>`,
   "Turquía": `<rect width="3" height="2" fill="#e30a17"/><circle cx="1.2" cy="1" r=".44" fill="#fff"/><circle cx="1.35" cy="1" r=".35" fill="#e30a17"/><path d="M1.85 .78l.09 .2 .22 .03-.16 .15 .04 .22-.19-.1-.19 .1 .04-.22-.16-.15 .22-.03z" fill="#fff"/>`,
   "Malta": `<rect width="3" height="2" fill="#fff"/><rect x="1.5" width="1.5" height="2" fill="#cf142b"/><rect x=".28" y=".16" width=".12" height=".42" fill="#9ea2a8"/><rect x=".13" y=".31" width=".42" height=".12" fill="#9ea2a8"/>`,
   "España": `<rect width="3" height="2" fill="#aa151b"/><rect y=".5" width="3" height="1" fill="#f1bf00"/>`,
-  "Kosovo": `<rect width="3" height="2" fill="#244aa5"/><path d="M1.2 .88q.3-.2 .6 0 .25 .25 .05 .55-.35 .2-.7 0-.2-.3 .05-.55z" fill="#d0a650"/><circle cx="1.05" cy=".55" r=".08" fill="#fff"/><circle cx="1.5" cy=".45" r=".08" fill="#fff"/><circle cx="1.95" cy=".55" r=".08" fill="#fff"/>`,
   "Azerbaiyán": `${h3("#0092bc", "#e8112d", "#3f9c35")}<circle cx="1.4" cy="1" r=".26" fill="#fff"/><circle cx="1.52" cy="1" r=".21" fill="#e8112d"/>`,
   "Francia": v3("#002395", "#fff", "#ed2939"),
   // Italia comparte el verde-blanco-rojo vertical con Mexico, que lleva el emblema
@@ -612,10 +607,6 @@ const BANDERAS = {
   "Ecuador": `<rect width="3" height="2" fill="#ffdd00"/><rect y="1" width="3" height=".5" fill="#034ea2"/><rect y="1.5" width="3" height=".5" fill="#ed1c24"/><circle cx="1.5" cy="1" r=".3" fill="#ffdd00" stroke="#034ea2" stroke-width=".08"/>`,
   "Venezuela": `<rect width="3" height="2" fill="#fcd116"/><rect y=".667" width="3" height=".666" fill="#00247d"/><rect y="1.333" width="3" height=".667" fill="#cf142b"/><circle cx="1.5" cy="1" r=".07" fill="#fff"/><circle cx="1.1" cy=".92" r=".07" fill="#fff"/><circle cx="1.9" cy=".92" r=".07" fill="#fff"/><circle cx="1.25" cy="1.14" r=".07" fill="#fff"/><circle cx="1.75" cy="1.14" r=".07" fill="#fff"/>`,
   "Bolivia": h3("#d52b1e", "#f9e300", "#007934"),
-
-  // --- Asia ---
-  "Corea del Sur": `<rect width="3" height="2" fill="#fff"/><path d="M1.5 .62a.38 .38 0 010 .76 .38 .38 0 000 .76 .76 .76 0 010-1.52z" fill="#cd2e3a"/><path d="M1.5 .62a.38 .38 0 000 .76 .38 .38 0 010 .76 .76 .76 0 000-1.52z" fill="#0047a0"/><rect x=".3" y=".45" width=".42" height=".1" fill="#000"/><rect x="2.28" y="1.45" width=".42" height=".1" fill="#000"/>`,
-  "China": `<rect width="3" height="2" fill="#de2910"/><path d="M.6 .35l.16 .33 .36-.05-.26 .26 .06 .36-.32-.17-.32 .17 .06-.36-.26-.26 .36 .05z" fill="#ffde00"/><circle cx="1.25" cy=".28" r=".09" fill="#ffde00"/><circle cx="1.5" cy=".52" r=".09" fill="#ffde00"/><circle cx="1.5" cy=".85" r=".09" fill="#ffde00"/><circle cx="1.25" cy="1.08" r=".09" fill="#ffde00"/>`,
 };
 
 function banderaDe(pais, grande) {
@@ -801,7 +792,7 @@ function colorSemaforo(racha, umbral) {
 
 // Los americanos primero: es de donde salio el proyecto y son las que mas se miran.
 // Lo que no este en la lista se agrega al final por orden alfabetico.
-const ORDEN_CONTINENTES = ["Sudamérica", "Norte y Centroamérica", "Europa", "Asia"];
+const ORDEN_CONTINENTES = ["Sudamérica", "Norte y Centroamérica", "Europa"];
 
 function escaparAtributo(texto) {
   return String(texto).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");

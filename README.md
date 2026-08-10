@@ -8,7 +8,9 @@ Página web móvil para visualizar el seguimiento de las ligas activas del proye
 
 Página estática (`index.html`) optimizada para móvil que lee datos publicados como CSV desde el Google Sheet del proyecto y los muestra en tiempo real. No requiere servidor ni backend propio — es 100% gratis vía GitHub Pages.
 
-**Ligas activas:** hoy son 43 (24 europeas, 9 de Norte y Centroamérica, 8 sudamericanas y 2 asiáticas). La página **no las tiene hardcodeadas**: arma la lista con lo que encuentra en la hoja `Racha_Actual`, incluida la columna `region`, así que agregar o quitar una liga en `ligas.json` del proyecto de datos se refleja acá sin tocar código.
+**Ligas activas:** hoy son 61 (44 europeas, 9 de Norte y Centroamérica y 8 sudamericanas). La página **no las tiene hardcodeadas**: arma la lista con lo que encuentra en la hoja `Racha_Actual`, incluida la columna `region`, así que agregar o quitar una liga en `ligas.json` del proyecto de datos se refleja acá sin tocar código.
+
+> Ojo con el "sin tocar código": vale para las filas, no para el resto. Un país nuevo necesita su entrada en `BANDERAS`, y un continente nuevo su lugar en `ORDEN_CONTINENTES`. Y **quitar una liga de `ligas.json` no la borra de acá**: mientras sus filas sigan en `Racha_Actual` la página la muestra igual, congelada. Se retiran del Sheet con `eliminar_liga.yml` en el proyecto de datos.
 
 ## Aspecto
 
@@ -26,7 +28,7 @@ Los colores del semáforo, de las cards de racha y de los badges quedan fijos a 
 
 ### Banderas planas, no emoji
 
-`BANDERAS` en `index.html` trae **43 banderas dibujadas como SVG en línea**, en un lienzo 3×2, ~9 KB en total. Reemplazan a los emoji, que los dibuja el sistema operativo: salían ondeados, ocupaban más alto del necesario y en varios Android ni existían.
+`BANDERAS` en `index.html` trae **60 banderas dibujadas como SVG en línea**, en un lienzo 3×2. Son 60 y no 61 porque Inglaterra aporta dos ligas con el mismo país: banderas y ligas no son la misma cuenta. Reemplazan a los emoji, que los dibuja el sistema operativo: salían ondeados, ocupaban más alto del necesario y en varios Android ni existían.
 
 Son versiones **simplificadas a propósito**: a 26px un escudo real es una mancha. Donde dos banderas del set se confundirían se agrega la forma mínima que las separa — el escudo de Eslovaquia y Eslovenia frente al tricolor ruso, la hoja de Canadá frente a Perú, y un círculo, cinco estrellas y un triángulo para los tres azul-blanco-azul centroamericanos.
 
