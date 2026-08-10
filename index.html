@@ -248,7 +248,23 @@
   .subtabs-lista .subtab-btn { font-size: 12px; padding: 12px 2px; white-space: nowrap; }
   .tab-cont { font-size: 11px; opacity: 0.85; margin-left: 3px; }
 
-  .card { border-radius: 0; padding: 20px; margin-bottom: 16px; text-align: center; }
+  /* position:relative para poder colgar la suma de puntajes arriba a la derecha,
+     en el aire que el padding del card ya dejaba libre. */
+  .card { border-radius: 0; padding: 20px; margin-bottom: 16px; text-align: center; position: relative; }
+  .suma-card {
+    position: absolute; top: 7px; right: 9px;
+    display: none;                 /* solo aparece si la liga tiene algun puntaje */
+    align-items: baseline; gap: 5px;
+    background: rgba(0,0,0,0.22);
+    border: 1px solid rgba(255,255,255,0.35);
+    padding: 3px 8px;
+    color: #fff; line-height: 1;
+  }
+  .suma-card.tiene { display: inline-flex; }
+  /* El cuadro gris es claro, no degradado: ahi el texto blanco no se leeria. */
+  .card-gray .suma-card { background: var(--superficie-2); border-color: var(--borde); color: var(--texto); }
+  .suma-card-txt { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.85; }
+  .suma-card-num { font-size: 16px; font-weight: 700; }
   .card-green { background: linear-gradient(135deg, #1b4332, #2d6a4f); }
   .card-yellow { background: linear-gradient(135deg, #7f5c00, #a67c00); }
   .card-red { background: linear-gradient(135deg, #6a1b1b, #9d2929); }
@@ -381,7 +397,25 @@
     min-width: 50px;
     text-align: center;
   }
-  .badge-fila { display: flex; justify-content: center; gap: 6px; margin-top: 6px; }
+  .badge-fila { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; }
+
+  /* Cuadrito de puntaje, al extremo derecho del bloque del partido. El margin-left
+     automatico lo empuja al borde y deja los badges centrados donde estaban. */
+  .puntaje {
+    margin-left: auto;
+    width: 38px; height: 26px;
+    flex-shrink: 0;
+    border: 1px solid var(--borde); border-radius: 0;
+    background: var(--bg); color: var(--texto);
+    font-size: 13px; font-weight: 700; text-align: center;
+    padding: 0 2px;
+    font-family: inherit;
+  }
+  .puntaje.cargado { border-color: #2d6a4f; box-shadow: inset 0 0 0 1px #2d6a4f; }
+  /* Las flechitas del input number comen la mitad del ancho en un cuadrito de 38px. */
+  .puntaje::-webkit-outer-spin-button,
+  .puntaje::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .puntaje { -moz-appearance: textfield; }
   .empate-badge, .modalidad-badge {
     display: inline-block;
     font-size: 10px;
@@ -703,6 +737,91 @@ function parseCSVDesde(texto, filasAOmitir) {
 // Las celdas de temporada de "Analisis 2" vienen como texto legible, del estilo
 // "6 de 81 (7,4%) -> 20, 13, 12". El formato lo genera analisis_extremos.py: si
 // cambia alla, hay que cambiar esta expresion.
+// --- Puntajes por partido ---
+// Un numero que el usuario carga a mano en cada partido; la suma por liga se
+// muestra en el cuadro de color. Vive en localStorage, o sea **por navegador**:
+// no viaja entre dispositivos ni se comparte con quien abra el mismo enlace.
+//
+// **La clave no usa fixture_id a proposito.** Esa columna tiene tipos mezclados en
+// el Sheet y gviz devuelve vacias justo las celdas de la temporada en curso, que
+// son las unicas que muestra esta pestana: la clave quedaria vacia para todos los
+// partidos y se pisarian entre si. fecha + los dos equipos es estable y no se
+// corre cuando entran partidos nuevos, como si pasaria con el indice de la fila.
+//
+// La clave viaja en un `data-clave` y no dentro del onclick: un equipo con
+// apostrofo — y hay varios — cerraria la comilla del atributo y romperia el HTML.
+// Es el mismo motivo por el que el acordeon pasa data-region en vez del nombre.
+function clavePartido(ligaId, p) {
+  return [ligaId, p.fecha, p.equipo_local, p.equipo_visitante].join("|");
+}
+
+// El id de liga es lo que va antes del primer separador de la clave.
+function ligaDeClave(clave) {
+  return String(clave).split("|")[0];
+}
+
+function leerPuntajes() {
+  try { return JSON.parse(localStorage.getItem("puntajesPartidos") || "{}"); }
+  catch (e) { return {}; }
+}
+
+function guardarPuntajes(mapa) {
+  try { localStorage.setItem("puntajesPartidos", JSON.stringify(mapa)); }
+  catch (e) { /* modo privado */ }
+}
+
+// El prefijo lleva el separador para que la liga 128 no capture a la 1281.
+function puntajesDeLiga(ligaId) {
+  const mapa = leerPuntajes();
+  const prefijo = ligaId + "|";
+  return Object.keys(mapa)
+    .filter(k => k.startsWith(prefijo))
+    .map(k => mapa[k]);
+}
+
+function anotarPuntaje(evento, input) {
+  evento.stopPropagation(); // el bloque del partido borra al click; escribir no
+  const bloque = input.closest(".partido");
+  if (!bloque) return;
+  const clave = bloque.dataset.clave;
+  const texto = input.value;
+  const n = parseFloat(String(texto).replace(",", "."));
+  const vacio = texto === "" || isNaN(n);
+
+  const mapa = leerPuntajes();
+  if (vacio) delete mapa[clave];
+  else mapa[clave] = n;
+  guardarPuntajes(mapa);
+
+  input.classList.toggle("cargado", !vacio);
+  actualizarSumaCard(ligaDeClave(clave));
+}
+
+// Borra el puntaje del partido en el que se hizo click. No re-renderiza la lista
+// entera: solo vacia ese input, para no perder la posicion del scroll.
+function borrarPuntaje(bloque) {
+  const clave = bloque.dataset.clave;
+  const mapa = leerPuntajes();
+  if (!(clave in mapa)) return;
+  delete mapa[clave];
+  guardarPuntajes(mapa);
+  const input = bloque.querySelector(".puntaje");
+  if (input) { input.value = ""; input.classList.remove("cargado"); }
+  actualizarSumaCard(ligaDeClave(clave));
+}
+
+function actualizarSumaCard(ligaId) {
+  const caja = document.getElementById("sumaCard");
+  if (!caja) return;
+  const valores = puntajesDeLiga(ligaId);
+  caja.classList.toggle("tiene", valores.length > 0);
+  if (!valores.length) return;
+  const total = valores.reduce((a, b) => a + b, 0);
+  // Los puntajes pueden ser decimales; se recorta la cola de coma flotante.
+  const txt = Number.isInteger(total) ? total : Math.round(total * 100) / 100;
+  caja.innerHTML = `<span class="suma-card-txt">Suma</span><span class="suma-card-num">${String(txt).replace(".", ",")}</span>`;
+}
+
 // --- Umbrales de la prueba (2026-08-10) ---
 // La regla de produccion sigue siendo `umbral_alerta` de la hoja, promedio + 1
 // desviacion, y es la que dispara los eventos de Google Calendar. **La app no la
@@ -1092,16 +1211,20 @@ function mostrarDetalleLiga(ligaId) {
   // 'Analisis 2' (recien agregada, la pestana se regenera una vez por dia) se cae
   // al cuadro viejo con el numero grande, que solo necesita 'Racha_Actual'.
   const infoExtremos = datosExtremos.find(r => r.liga_id === ligaId);
+  // La suma de puntajes va en las tres variantes del cuadro, arriba a la derecha.
+  // Arranca oculta y actualizarSumaCard() la muestra si la liga tiene algun valor.
+  const suma = '<div class="suma-card" id="sumaCard"></div>';
   const cardHTML = !infoRacha
-    ? '<div class="card card-gray"><div class="racha-label" style="font-size:15px;">Sin datos de racha todavía</div></div>'
+    ? `<div class="card card-gray">${suma}<div class="racha-label" style="font-size:15px;">Sin datos de racha todavía</div></div>`
     : infoExtremos
-      ? `<div class="card card-extremos ${colorCard}">${htmlRarezaRacha(infoExtremos, infoAnalisis, racha, umbral)}</div>`
-      : `<div class="card ${colorCard}">
+      ? `<div class="card card-extremos ${colorCard}">${suma}${htmlRarezaRacha(infoExtremos, infoAnalisis, racha, umbral)}</div>`
+      : `<div class="card ${colorCard}">${suma}
            <div class="racha-numero">${racha}</div>
            <div class="racha-label">partidos consecutivos sin empate (umbral: ${umbral})</div>
            <div class="racha-label" style="margin-top:6px; font-weight:600;">${etiquetaPorRacha(racha, umbral)}</div>
          </div>`;
   document.getElementById("detalleRachaCard").innerHTML = cardHTML;
+  actualizarSumaCard(ligaId);
 
   // --- Sub-pestaña Analisis ---
   if (infoAnalisis) {
@@ -1355,10 +1478,13 @@ async function renderPartidos(ligaId) {
     if (partidos.length === 0) {
       html += '<div class="empty">Aún no hay partidos registrados para esta liga</div>';
     } else {
+      const puntajes = leerPuntajes();
       partidos.forEach(p => {
         const esEmpate = p.es_empate === "SI";
+        const clave = clavePartido(ligaId, p);
+        const valor = clave in puntajes ? puntajes[clave] : "";
         html += `
-        <div class="partido">
+        <div class="partido" data-clave="${escaparAtributo(clave)}" onclick="borrarPuntaje(this)">
           <div class="partido-fecha">
             <span>${p.fecha} · ${p.hora_peru} (hora Perú)</span>
           </div>
@@ -1370,6 +1496,10 @@ async function renderPartidos(ligaId) {
           <div class="badge-fila">
             ${esEmpate ? '<span class="empate-badge">EMPATE</span>' : ""}
             <span class="modalidad-badge ${p.modalidad}">${p.modalidad}</span>
+            <input type="number" inputmode="decimal" class="puntaje ${valor === "" ? "" : "cargado"}"
+                   value="${valor}" title="Puntaje. Tocá el partido para borrarlo."
+                   onclick="event.stopPropagation()"
+                   oninput="anotarPuntaje(event, this)">
           </div>
         </div>
       `;

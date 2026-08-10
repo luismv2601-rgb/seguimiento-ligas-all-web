@@ -1,5 +1,17 @@
 # Changelog
 
+## v5.6.0 - 2026-08-10
+
+Puntajes por partido, cargados a mano, con la suma a la vista.
+
+- **Cuadrito numérico al extremo derecho de cada partido**, en la sub-pestaña Partidos. Acepta enteros y decimales. Cuando tiene valor se marca con el borde verde
+- **La suma de la liga aparece arriba a la derecha del cuadro de color**, en el aire que el padding ya dejaba libre. Se actualiza mientras escribís, sin recargar. Está oculta si la liga no tiene ningún valor cargado
+- **Tocar el partido borra su puntaje.** Escribir en el cuadrito no lo borra: el input hace `stopPropagation()`. Al borrar solo se vacía ese input, no se re-renderiza la lista, así no se pierde el scroll
+- Los valores viven en `localStorage`, o sea **por navegador**: sobreviven a salir de la liga, al botón de refrescar y a cerrar la app, pero no viajan entre dispositivos ni se comparten con quien abra el mismo enlace
+- **La clave del partido no usa `fixture_id`.** Esa columna tiene tipos mezclados y gviz devuelve vacías justo las celdas de la temporada en curso, que son las únicas que muestra esta pestaña: todos los partidos habrían compartido una clave vacía y se hubieran pisado. Se usa `liga + fecha + local + visitante`, que además no se corre cuando entran partidos nuevos, como sí pasaría con el índice de la fila
+- **La clave viaja en un `data-clave`, no dentro del `onclick`.** Hay equipos con apóstrofo (`Nott'm Forest`) que habrían cerrado la comilla del atributo y roto el HTML — el mismo bug que en su momento obligó a pasar `data-region` en el acordeón
+- El prefijo de liga se compara con el separador incluido, para que la liga 128 no se lleve los puntajes de la 1281
+
 ## v5.5.0 - 2026-08-10
 
 **Prueba de umbral más exigente.** Con la regla de producción (promedio + 1 desviación) saltaban ~43 alertas por mes y no se podía actuar sobre ellas. La app pasa a pintar alertas con **μ+2σ**, a modo de prueba.

@@ -125,11 +125,26 @@ El cuadro de color muestra cuatro referencias arriba de la escala:
 Se abre una vista propia con una card de racha vigente arriba, y 4 sub-pestañas en este orden. **Abre en Extremos**, que es lo que más se consulta:
 
 - **Extremos** — lee la hoja `Analisis 2`. Un bloque por temporada con cuántas rachas llegaron a **μ+2σ**, qué porcentaje representan sobre los empates de esa temporada y los largos concretos como chips, con el mayor resaltado. La escala que ubica la racha de hoy vive arriba, en el cuadro de color (ver "El umbral de la app").
-- **Partidos** — todos los partidos de la **temporada actual** de esa liga. La temporada no se deduce de la fecha del último partido, porque en las ligas europeas la temporada 2026 se juega entre agosto de 2026 y mayo de 2027; se pregunta al Sheet con `select max(E)`.
+- **Partidos** — todos los partidos de la **temporada actual** de esa liga. La temporada no se deduce de la fecha del último partido, porque en las ligas europeas la temporada 2026 se juega entre agosto de 2026 y mayo de 2027; se pregunta al Sheet con `select max(E)`. Cada partido lleva un **cuadrito de puntaje** (ver abajo).
 - **Próximos** — lee la hoja `Proximos`: los partidos con hora confirmada de los próximos 14 días, agrupados por día y con la distancia en lenguaje natural (hoy, mañana, en 3 días).
 - **Análisis** — ficha con los campos de la pestaña `Analisis` del Sheet (excepto `liga_id`).
 
 > El orden de los botones, el de los `<div class="subpage">`, cuál lleva `active` y la lista de `cambiarSubpagina()` tienen que coincidir. Si se desfasan, la app abre en una pestaña vacía.
+
+#### Puntajes por partido
+
+Cada partido de la sub-pestaña **Partidos** lleva un cuadrito numérico al extremo derecho. **La suma de la liga se muestra arriba a la derecha del cuadro de color**, y se actualiza mientras se escribe. Está oculta mientras la liga no tenga ningún valor.
+
+**Tocar el partido borra su puntaje.** El cuadrito hace `stopPropagation()`, así que escribir no lo borra. Al borrar se vacía solo ese input en vez de re-renderizar la lista, para no perder el scroll.
+
+Viven en `localStorage`, o sea **por navegador**: sobreviven a salir de la liga, al botón ↻ y a cerrar la app, pero no viajan entre dispositivos.
+
+> **Dos trampas resueltas, que conviene no reintroducir:**
+>
+> - **La clave no usa `fixture_id`.** Esa columna tiene tipos mezclados y gviz devuelve vacías justo las celdas de la temporada en curso — las únicas que muestra esta pestaña —, así que todos los partidos habrían compartido una clave vacía. Se usa `liga|fecha|local|visitante`, que además no se corre cuando entran partidos nuevos, como sí pasaría con el índice de fila.
+> - **La clave viaja en `data-clave`, no dentro del `onclick`.** Hay equipos con apóstrofo (`Nott'm Forest`) que cerrarían la comilla del atributo y romperían el HTML. Es el mismo bug que obligó a pasar `data-region` en el acordeón.
+>
+> Y el prefijo de liga se compara con el separador incluido (`128|`), para que la liga 128 no se lleve los puntajes de la 1281.
 
 La última actualización del sistema (hora Perú) se muestra al inicio. Un botón flotante ↻ recarga los datos y limpia la caché de partidos.
 
