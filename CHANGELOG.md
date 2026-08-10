@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.4.0 - 2026-08-09
+
+La pantalla principal pasa a tener tres pestañas, y aparece una lista de seguimiento propia.
+
+- **Tres pestañas: En alerta, Ligas y Seleccionados.** Antes era una sola columna con el bloque de alerta arriba y los continentes debajo. Abre en **En alerta**, que es lo que más se mira. Reusan el CSS de `.subtabs`, el mismo de las cuatro sub-pestañas del detalle de liga, así que no hubo que inventar estilos
+- Cada pestaña muestra su cantidad entre paréntesis. La de En alerta y la de Seleccionados se ocultan cuando están en cero, para no mostrar un `(0)` al pedo
+- **Nueva pestaña Seleccionados.** Se marca una liga desde En alerta con un cuadrito y queda ahí **hasta que se la destilde**, incluso si mientras tanto empató y salió de alerta: es una lista de seguimiento manual, no un espejo de las alertas. Por eso sus filas también llevan cuadrito — sin él, una liga que dejó de estar en alerta quedaba atrapada, sin forma de sacarla
+- El cuadrito hace `stopPropagation()`: la fila entera tiene un `onclick` que abre el detalle de la liga, así que sin eso marcar una liga te abría su detalle
+- La selección vive en `localStorage`, o sea **por navegador**. No viaja entre dispositivos ni se comparte con quien abra el mismo enlace
+- **Al escribir en el buscador la app salta a Ligas.** Buscar es buscar en todo el catálogo: parado en En alerta, lo que se escribe casi nunca está ahí y la pantalla parecía vacía. El filtro se sigue aplicando a las tres, así que los contadores no mienten
+- **Fuera la nota de orden** de arriba de la lista ("En alerta: el que juega antes va arriba · dentro de cada continente..."), y con ella su CSS. También salieron `.alerta-bloque` y `.alerta-titulo`, que quedaron sin uso: el título del bloque de alerta ahora es la pestaña
+- `renderLista()` se parte en dos: pinta las tres pestañas de una sola pasada con la misma lista ya filtrada, y delega los continentes en `renderPorContinente()`
+
 ## v5.3.1 - 2026-08-09
 
 Salen otras 4 ligas del sistema, las que juegan casi todo en paralelo.

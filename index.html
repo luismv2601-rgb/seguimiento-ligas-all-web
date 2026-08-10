@@ -128,6 +128,18 @@
   .chevron { align-self: center; }
   .semaforo { width: 11px; height: 11px; border-radius: 0; flex-shrink: 0; }
 
+  /* Cuadrito de seleccion. Solo aparece en "En alerta" y en "Seleccionados";
+     cuadrado como todo lo demas, que las banderas son la unica excepcion. */
+  .check {
+    width: 18px; height: 18px; flex-shrink: 0;
+    border: 1px solid var(--borde); border-radius: 0;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; line-height: 1;
+    color: transparent;
+  }
+  .check-on { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+
   .pais-pill {
     display: inline-flex;
     align-items: center;
@@ -156,17 +168,10 @@
   .pais-flag-grande { width: 42px; height: 28px; border-radius: 5px; }
 
   /* --- Agrupacion por continente --- */
-  .alerta-titulo {
-    display: flex; align-items: center; gap: 7px;
-    font-size: 12px; font-weight: 700; color: #9d2929;
-    text-transform: uppercase; letter-spacing: 0.5px;
-    margin: 2px 2px 8px 2px;
-  }
   .sin-alertas {
     font-size: 12px; color: var(--texto-tenue);
     margin: 2px 2px 16px 2px;
   }
-  .alerta-bloque { margin-bottom: 18px; }
   /* La cuenta va bajo el semaforo, en el espacio vertical que la columna derecha
      ya tenia libre: la fila no crece de alto. */
   .cuenta { font-size: 10px; font-weight: 700; color: #9d2929; line-height: 1; white-space: nowrap; }
@@ -237,6 +242,12 @@
   .subpage { display: none; }
   .subpage.active { display: block; }
 
+  /* Las tres de la pantalla principal llevan etiquetas mas largas que las cuatro
+     del detalle ("Seleccionados" contra "Extremos"), asi que achican un punto
+     para no cortarse en pantallas de 360px. */
+  .subtabs-lista .subtab-btn { font-size: 12px; padding: 12px 2px; white-space: nowrap; }
+  .tab-cont { font-size: 11px; opacity: 0.85; margin-left: 3px; }
+
   .card { border-radius: 0; padding: 20px; margin-bottom: 16px; text-align: center; }
   .card-green { background: linear-gradient(135deg, #1b4332, #2d6a4f); }
   .card-yellow { background: linear-gradient(135deg, #7f5c00, #a67c00); }
@@ -269,12 +280,6 @@
     margin: 20px 0 10px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-  }
-
-  .orden-nota {
-    font-size: 12px;
-    color: var(--texto-tenue);
-    margin: 2px 2px 10px 2px;
   }
 
   /* --- Escala "qué tan rara es esta racha" --- */
@@ -415,8 +420,16 @@
 <div class="page active" id="pageLista">
   <div class="section-heading">Detalle de las ligas</div>
   <input type="text" class="buscador" id="buscadorLigas" placeholder="Buscar liga o país...">
-  <div class="orden-nota">En alerta: el que juega antes va arriba · dentro de cada continente, mayor % en serie primero</div>
-  <div id="listaResumen"><div class="loading">Cargando datos...</div></div>
+
+  <div class="subtabs subtabs-lista">
+    <button class="subtab-btn active" id="tabBtnAlerta" onclick="cambiarPestanaLista('alerta')">En alerta<span class="tab-cont" id="contAlerta"></span></button>
+    <button class="subtab-btn" id="tabBtnLigas" onclick="cambiarPestanaLista('ligas')">Ligas<span class="tab-cont" id="contLigas"></span></button>
+    <button class="subtab-btn" id="tabBtnSeleccionados" onclick="cambiarPestanaLista('seleccionados')">Seleccionados<span class="tab-cont" id="contSeleccionados"></span></button>
+  </div>
+
+  <div class="subpage active" id="tabAlerta"><div class="loading">Cargando datos...</div></div>
+  <div class="subpage" id="tabLigas"></div>
+  <div class="subpage" id="tabSeleccionados"></div>
 </div>
 
 <div class="page" id="pageDetalleLiga">
@@ -714,7 +727,7 @@ function cambiarSubpagina(sub) {
 }
 
 async function cargarTodo() {
-  document.getElementById("listaResumen").innerHTML = '<div class="loading">Cargando datos...</div>';
+  document.getElementById("tabAlerta").innerHTML = '<div class="loading">Cargando datos...</div>';
   try {
     const t = Date.now();
     cachePartidos = {}; // el boton de refrescar tiene que traer partidos frescos
@@ -768,11 +781,11 @@ async function cargarTodo() {
       ? `Última actualización del sistema: ${filaEjecucion.valor} (hora Perú)`
       : "";
 
-    renderLista(ligas);
+    aplicarFiltro(); // respeta lo que haya escrito en el buscador al refrescar
 
     if (ligaActualId) mostrarDetalleLiga(ligaActualId);
   } catch (err) {
-    document.getElementById("listaResumen").innerHTML = '<div class="empty">Error al cargar los datos. Intenta de nuevo.</div>';
+    document.getElementById("tabAlerta").innerHTML = '<div class="empty">Error al cargar los datos. Intenta de nuevo.</div>';
     console.error(err);
   }
 }
@@ -794,6 +807,40 @@ function escaparAtributo(texto) {
 
 function slug(texto) {
   return String(texto).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9]/g, "");
+}
+
+// --- Seleccion para la pestana "Seleccionados" ---
+// Vive en localStorage, o sea **por navegador**: no viaja entre dispositivos ni
+// se comparte con quien abra el mismo enlace. Guardar una seleccion compartida
+// pediria un backend, que este proyecto no tiene.
+function leerSeleccionadas() {
+  try { return new Set(JSON.parse(localStorage.getItem("ligasSeleccionadas") || "[]")); }
+  catch (e) { return new Set(); }
+}
+
+function alternarSeleccion(evento, ligaId) {
+  // Sin esto el click sube a la fila, que tiene su propio onclick, y marcar una
+  // liga te abriria su detalle.
+  evento.stopPropagation();
+  const sel = leerSeleccionadas();
+  sel.has(ligaId) ? sel.delete(ligaId) : sel.add(ligaId);
+  try { localStorage.setItem("ligasSeleccionadas", JSON.stringify([...sel])); } catch (e) { /* modo privado */ }
+  aplicarFiltro();
+}
+
+// La liga marcada queda en "Seleccionados" aunque despues se le corte la racha y
+// salga de alerta: es una lista de seguimiento, la vacia el usuario. Por eso la
+// fila de esa pestana tambien lleva su cuadrito — si no, una liga que dejo de
+// estar en alerta ya no se podria destildar desde ningun lado.
+let pestanaLista = "alerta";
+
+function cambiarPestanaLista(cual) {
+  pestanaLista = cual;
+  [["alerta", "Alerta"], ["ligas", "Ligas"], ["seleccionados", "Seleccionados"]].forEach(([clave, nombre]) => {
+    const activa = cual === clave;
+    document.getElementById("tab" + nombre).classList.toggle("active", activa);
+    document.getElementById("tabBtn" + nombre).classList.toggle("active", activa);
+  });
 }
 
 // Se guarda que grupos estan ABIERTOS, no cerrados: asi el estado inicial, sin
@@ -863,16 +910,21 @@ function refrescarCuentas() {
 }
 setInterval(refrescarCuentas, 60000);
 
-function filaLigaHTML(liga, conCuenta) {
+function filaLigaHTML(liga, conCuenta, conCheck) {
   const info = datosRacha.find(r => r.liga_id === liga.id);
   const racha = info ? parseInt(info.racha_actual || "0") : null;
   const umbral = info ? parseInt(info.umbral_alerta || "5") : 5;
   const rachaMaxima = info ? info.racha_maxima : "-";
   const color = colorSemaforo(racha, umbral);
+  const marcada = conCheck && leerSeleccionadas().has(liga.id);
 
   return `
     <div class="fila-liga" onclick="mostrarDetalleLiga('${liga.id}')">
       <div class="fila-liga-izq">
+        ${conCheck
+          ? `<span class="check ${marcada ? "check-on" : ""}" onclick="alternarSeleccion(event, '${liga.id}')"
+                   role="checkbox" aria-checked="${marcada}" title="Marcar para Seleccionados">✓</span>`
+          : ""}
         ${banderaDe(liga.pais)}
         <div>
           <div class="fila-liga-nombre">${liga.nombre}</div>
@@ -909,32 +961,37 @@ function porProximoPartido(a, b) {
   return b.pctSecuenciales - a.pctSecuenciales || a.pais.localeCompare(b.pais);
 }
 
+// Pinta las tres pestanas de una, con la misma lista ya filtrada por el buscador,
+// para que los contadores del encabezado no se desincronicen de lo que se ve.
 function renderLista(listaLigas, plano) {
-  const contenedor = document.getElementById("listaResumen");
+  const enAlerta = listaLigas.filter(l => l.rango === 0).sort(porProximoPartido);
+  const seleccionadas = leerSeleccionadas();
+  const marcadas = listaLigas.filter(l => seleccionadas.has(l.id)).sort(porProximoPartido);
+
+  document.getElementById("tabAlerta").innerHTML = enAlerta.length
+    ? enAlerta.map(l => filaLigaHTML(l, true, true)).join("")
+    : '<div class="sin-alertas">Ninguna liga superó su umbral ahora mismo.</div>';
+
+  document.getElementById("tabLigas").innerHTML = renderPorContinente(listaLigas, plano);
+
+  document.getElementById("tabSeleccionados").innerHTML = marcadas.length
+    ? marcadas.map(l => filaLigaHTML(l, true, true)).join("")
+    : `<div class="sin-alertas">Todavía no seleccionaste ninguna liga.
+         Tocá el cuadrito de una liga en la pestaña <b>En alerta</b> para agregarla acá.</div>`;
+
+  document.getElementById("contAlerta").textContent = enAlerta.length ? `(${enAlerta.length})` : "";
+  document.getElementById("contLigas").textContent = `(${listaLigas.length})`;
+  document.getElementById("contSeleccionados").textContent = marcadas.length ? `(${marcadas.length})` : "";
+}
+
+function renderPorContinente(listaLigas, plano) {
   if (listaLigas.length === 0) {
-    contenedor.innerHTML = '<div class="empty">No se encontraron ligas con ese filtro</div>';
-    return;
+    return '<div class="empty">No se encontraron ligas con ese filtro</div>';
   }
 
   // Buscando, los grupos estorban: se muestran los resultados planos.
-  if (plano) {
-    contenedor.innerHTML = listaLigas.map(filaLigaHTML).join("");
-    return;
-  }
+  if (plano) return listaLigas.map(l => filaLigaHTML(l)).join("");
 
-  const enAlerta = listaLigas.filter(l => l.rango === 0).sort(porProximoPartido);
-
-  let html = "";
-  if (enAlerta.length) {
-    html += `<div class="alerta-bloque">
-      <div class="alerta-titulo"><span class="semaforo semaforo-rojo"></span>En alerta (${enAlerta.length})</div>
-      ${enAlerta.map(l => filaLigaHTML(l, true)).join("")}
-    </div>`;
-  } else {
-    html += '<div class="sin-alertas">Ninguna liga superó su umbral ahora mismo.</div>';
-  }
-
-  // Las que estan en alerta aparecen tambien dentro de su continente, no solo arriba.
   const porRegion = {};
   listaLigas.forEach(l => { (porRegion[l.region] = porRegion[l.region] || []).push(l); });
 
@@ -947,11 +1004,11 @@ function renderLista(listaLigas, plano) {
   });
 
   const abiertos = leerGruposAbiertos();
-  regiones.forEach(region => {
+  return regiones.map(region => {
     const ligasDelGrupo = porRegion[region];
     const conAlarma = ligasDelGrupo.filter(l => l.rango === 0).length;
     const cerrado = !abiertos.has(region); // plegado salvo que el usuario lo haya abierto
-    html += `
+    return `
       <div class="grupo ${cerrado ? "cerrado" : ""}" id="grupo-${slug(region)}" data-region="${escaparAtributo(region)}">
         <div class="grupo-header" onclick="alternarGrupo('${slug(region)}')">
           <span class="grupo-nombre">${region}</span>
@@ -960,9 +1017,7 @@ function renderLista(listaLigas, plano) {
         <div class="grupo-contenido">${ligasDelGrupo.map(l => filaLigaHTML(l)).join("")}</div>
       </div>
     `;
-  });
-
-  contenedor.innerHTML = html;
+  }).join("");
 }
 
 function etiquetaPorRacha(racha, umbral) {
@@ -1282,13 +1337,19 @@ async function renderPartidos(ligaId) {
   }
 }
 
-document.getElementById("buscadorLigas").addEventListener("input", (e) => {
-  const q = e.target.value.trim().toLowerCase();
+function aplicarFiltro() {
+  const q = document.getElementById("buscadorLigas").value.trim().toLowerCase();
   const filtradas = q
     ? ligas.filter(l => l.nombre.toLowerCase().includes(q) || l.pais.toLowerCase().includes(q))
     : ligas;
   renderLista(filtradas, Boolean(q));
-});
+  // Buscar es buscar en todo el catalogo: si el usuario esta parado en "En alerta"
+  // o en "Seleccionados", lo que escribe casi nunca esta ahi y la pantalla parece
+  // vacia. Al tipear se lo lleva a "Ligas", que es donde estan todas.
+  if (q && pestanaLista !== "ligas") cambiarPestanaLista("ligas");
+}
+
+document.getElementById("buscadorLigas").addEventListener("input", aplicarFiltro);
 
 aplicarTema(document.documentElement.getAttribute("data-tema") || "claro");
 cargarTodo();

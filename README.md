@@ -38,12 +38,31 @@ Llevan un borde interno de medio píxel: sin él, las que tienen blanco al borde
 
 ### Pantalla principal — "Detalle de las ligas"
 
-- **Buscador** de texto que filtra en vivo por nombre de liga o país.
-- Un bloque **"En alerta"** arriba de todo con las ligas que superaron su umbral, sin importar el continente. **Aparecen también dentro de su continente**, no salen del grupo.
-- Debajo, **los continentes como acordeón**, plegados por defecto: se ven solo los nombres y se despliegan al tocarlos. El encabezado muestra `total · N con alarma`.
-- Cada fila muestra: bandera, nombre de la liga, país, **% de partidos en serie**, y a la derecha **racha actual / umbral / récord histórico** (ej. `9/5/15`) más un semáforo.
+**Buscador** de texto arriba, que filtra en vivo por nombre de liga o país, y debajo **tres pestañas**:
 
-#### Cuenta regresiva en el bloque de alerta
+| Pestaña | Qué muestra |
+|---|---|
+| **En alerta** | Las ligas que superaron su umbral, sin importar el continente. Ordenadas por quién juega antes. Cada fila lleva un cuadrito para seleccionarla |
+| **Ligas** | Las 57, agrupadas por continente en acordeón. Las que están en alerta **aparecen también acá**, dentro de su grupo |
+| **Seleccionados** | Las que el usuario marcó con el cuadrito |
+
+Reusan el CSS de `.subtabs`, el mismo de las cuatro sub-pestañas del detalle de liga. Abre siempre en **En alerta**. Las pestañas muestran su cantidad entre paréntesis; la de En alerta y la de Seleccionados se ocultan cuando están en cero.
+
+Cada fila muestra: bandera, nombre de la liga, país, **% de partidos en serie**, y a la derecha **racha actual / umbral / récord histórico** (ej. `9/5/15`) más un semáforo.
+
+#### La pestaña "Seleccionados"
+
+Es una **lista de seguimiento manual**. Se marca desde **En alerta** tocando el cuadrito, y la liga **queda ahí hasta que se la destilde** — también si mientras tanto empató y se le cortó la racha. Por eso las filas de Seleccionados llevan su propio cuadrito: si no, una liga que dejó de estar en alerta ya no se podría destildar desde ningún lado.
+
+> **Trampa:** la fila entera tiene un `onclick` que abre el detalle de la liga. El cuadrito hace `stopPropagation()`; sin eso, marcar una liga te abre su detalle.
+
+La selección vive en `localStorage`, o sea **por navegador**: no viaja entre dispositivos ni se comparte con quien abra el mismo enlace. Una selección compartida pediría un backend, que este proyecto no tiene.
+
+#### El buscador cambia de pestaña
+
+Al escribir algo, la app salta sola a **Ligas**. Buscar es buscar en todo el catálogo: parado en En alerta o en Seleccionados, lo que se escribe casi nunca está ahí y la pantalla parecería vacía. El filtro igual se aplica a las tres pestañas, así que los contadores nunca mienten sobre lo que se ve.
+
+#### Cuenta regresiva en las filas de alerta
 
 Cada liga en alerta muestra cuánto falta para su próximo partido, sacado de la hoja `Proximos`. Formato corto (`8h 32m`, `5d 11h`) porque va en una columna angosta; `sin fecha` si no hay partido en los próximos 14 días.
 
@@ -59,7 +78,11 @@ Cuando no hay cuenta —la mayoría de las filas— la columna va centrada, para
 
 El resultado es que **las filas en alerta miden lo mismo que las demás**: la cuenta usa espacio vertical que la columna derecha ya tenía libre.
 
-#### El orden dentro de cada grupo
+#### El orden
+
+En **En alerta** y en **Seleccionados** manda quién juega antes: una racha viva que juega en dos horas pesa más que una que juega el sábado. Las que no tienen partido programado van al final.
+
+Dentro de cada continente, en cambio:
 
 1. **Semáforo**.
 2. **`pct_secuenciales` descendente**.
